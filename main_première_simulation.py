@@ -132,27 +132,25 @@ def lieu_arrivee(lieu_depart, heure_depart): #juste l'heure, les minutes ne sont
 
 #c'est un schéma d'algo pour l'instant
 def simulation():
-
+    
+    Jour=[]
     trajet_realise=0
     
-    if nombre_deplacement == 0 : #si on ne prédit pas de déplacement ou son temps d'attente>24h
-        Jour=[]#lieu de stationnement aléoite suivant la loi du lieu de départ toute la journée
-    else:
-        lieu_depart=loi_lieu_depart(1) #on fait d'abord le premier trajet
-        temps_attente=               #Solène et Guilhem parts
-        temps_trajet=
-        heure_arrivee=temps_attente+temps_trajet
-        lieu_arrivee=lieu_arrivee(lieu_depart,heure_arrivee)
-        Jour=[[lieu_depart,temps_attente, temps_trajet,heure_arrivee, lieu_arrivee]]
-        trajet_realise=1
-
-        temps_attente=               #Solène et Guilhem parts
-        temps_trajet=
-        heure_arrivee=temps_attente+temps_trajet        
-        while heure_arrivee<23h59: #à modifier
+    temps_attente=               #Solène et Guilhem parts
+    temps_trajet=
+    heure_arrivee=temps_attente+temps_trajet #heure d'arrivée premier trajet
+    
+    while heure_arrivee<24: #à modifier (on vérifie à chaque fois qu'on n'a pas fini la journée)
+        if trajet_realise == 0: #c'est le premier déplacement
+            Jour.append([loi_lieu_depart(1),temps_attente, temps_trajet,heure_arrivee, lieu_arrivee(loi_lieu_depart(1),heure_arrivee)]) 
+            trajet_realise=1
+        else :
             trajet_realise =+ 1
-            lieu_depart= #prendre ligne du dessus
+            lieu_depart= Jour[trajet_realise-1,4] #lieu arrivee du déplacement précédent
             Jour.append([lieu_depart,temps_attente, temps_trajet,heure_arrivee, lieu_arrivee(lieu_depart,heure_arrivee)])
+            temps_attente=               #Solène et Guilhem parts
+            temps_trajet=
+            heure_arrivee=temps_attente+temps_trajet
         
     return Jour
 
