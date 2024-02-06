@@ -106,4 +106,28 @@ def lieu_arrivee(lieu_depart, heure_depart): #juste l'heure, les minutes ne sont
     return Lieu_Arrivee
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Fonction finale pour notre première simulation (elle doit sortir la journée de déplacements d'un individu).
+#On reprend le format de la base EMP ? (une ligne = un déplacement)
+def simulation():
+Jour=None
+
+    return Jour
+
+
+
 """Script"""
