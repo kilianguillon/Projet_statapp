@@ -11,6 +11,18 @@ import random
 EMP=pd.read_excel("Projet_statapp/data/EMP_deplacements_Charme.csv")
 EMP["HEURE_ARRIVEE"]=EMP["HEURE_ARRIVEE"].replace(',', '.', regex=True).astype(float)
 
+#On crée les plages horraires :
+
+EMP.loc[EMP["HEURE_ARRIVEE"].between(0, 11),"Plage_horraire"] = "00-11h"
+EMP.loc[EMP["HEURE_ARRIVEE"].between(11, 14),"Plage_horraire"] = "11-14h"
+EMP.loc[EMP["HEURE_ARRIVEE"].between(14, 17),"Plage_horraire"] = "14-17h"
+EMP.loc[EMP["HEURE_ARRIVEE"].between(17, 24),"Plage_horraire"] = "17-00h"
+
+
+
+
+
+
 """Fonctions"""
 
 def count_occ_pond(data, nom_var, nom_pond, taille=10):
@@ -45,13 +57,6 @@ def loi_lieu_depart(n=1, p_domicile=70.49/100, p_rue=23.87/100, p_parking=3.90/1
 
 #On va créer un e fonction liée à count_occ_pound qui pour chaque plage horraire va nous envoyer la proba de Lieu_Arrivee pour chaque Lieu_Depart
 def transition_plage(plage):
-
-    #On crée les plages horraires :
-
-    EMP.loc[EMP["HEURE_ARRIVEE"].between(0, 11),"Plage_horraire"] = "00-11h"
-    EMP.loc[EMP["HEURE_ARRIVEE"].between(11, 14),"Plage_horraire"] = "11-14h"
-    EMP.loc[EMP["HEURE_ARRIVEE"].between(14, 17),"Plage_horraire"] = "14-17h"
-    EMP.loc[EMP["HEURE_ARRIVEE"].between(17, 24),"Plage_horraire"] = "17-00h"
 
     Lieux = ["Domicile","Rue","Entreprise","Parking","Sans"] 
     results=None
@@ -123,9 +128,32 @@ def lieu_arrivee(lieu_depart, heure_depart): #juste l'heure, les minutes ne sont
 
 #Fonction finale pour notre première simulation (elle doit sortir la journée de déplacements d'un individu).
 #On reprend le format de la base EMP ? (une ligne = un déplacement)
-def simulation():
-    Jour=None
 
+
+#c'est un schéma d'algo pour l'instant
+def simulation():
+
+    trajet_realise=0
+    
+    if nombre_deplacement == 0 : #si on ne prédit pas de déplacement ou son temps d'attente>24h
+        Jour=[]#lieu de stationnement aléoite suivant la loi du lieu de départ toute la journée
+    else:
+        lieu_depart=loi_lieu_depart(1) #on fait d'abord le premier trajet
+        temps_attente=               #Solène et Guilhem parts
+        temps_trajet=
+        heure_arrivee=temps_attente+temps_trajet
+        lieu_arrivee=lieu_arrivee(lieu_depart,heure_arrivee)
+        Jour=[[lieu_depart,temps_attente, temps_trajet,heure_arrivee, lieu_arrivee]]
+        trajet_realise=1
+
+        temps_attente=               #Solène et Guilhem parts
+        temps_trajet=
+        heure_arrivee=temps_attente+temps_trajet        
+        while heure_arrivee<23h59: #à modifier
+            trajet_realise =+ 1
+            lieu_depart= #prendre ligne du dessus
+            Jour.append([lieu_depart,temps_attente, temps_trajet,heure_arrivee, lieu_arrivee(lieu_depart,heure_arrivee)])
+        
     return Jour
 
 
