@@ -131,29 +131,37 @@ def lieu_arrivee(lieu_depart, heure_depart): #juste l'heure, les minutes ne sont
 
 
 #c'est un schéma d'algo pour l'instant
-def simulation():
+def simulation(n=1):
     
     Jour=[]
-    trajet_realise=0
-    
-    temps_attente=               #Solène et Guilhem parts
-    temps_trajet=
-    heure_arrivee=temps_attente+temps_trajet #heure d'arrivée premier trajet
-    
-    while heure_arrivee<24: #à modifier (on vérifie à chaque fois qu'on n'a pas fini la journée)
-        if trajet_realise == 0: #c'est le premier déplacement
-            Jour.append([loi_lieu_depart(1),temps_attente, temps_trajet,heure_arrivee, lieu_arrivee(loi_lieu_depart(1),heure_arrivee)]) 
-            trajet_realise=1
-        else :
-            trajet_realise =+ 1
-            lieu_depart= Jour[trajet_realise-1,4] #lieu arrivee du déplacement précédent
-            Jour.append([lieu_depart,temps_attente, temps_trajet,heure_arrivee, lieu_arrivee(lieu_depart,heure_arrivee)])
-            temps_attente=               #Solène et Guilhem parts
-            temps_trajet=
-            heure_arrivee=temps_attente+temps_trajet
+
+    for individu in range(n):
+        Jour_temp=[]
         
+        trajet_realise=0
+        temps_attente=               #Solène et Guilhem parts
+        temps_trajet=
+        heure_arrivee=temps_attente+temps_trajet #heure d'arrivée premier trajet
+        
+        while heure_arrivee<24: #à modifier (on vérifie à chaque fois qu'on n'a pas fini la journée)
+            if trajet_realise == 0: #c'est le premier déplacement
+                Jour.append([loi_lieu_depart(1),temps_attente, temps_trajet,heure_arrivee, lieu_arrivee(loi_lieu_depart(1),heure_arrivee)]) 
+                trajet_realise=1
+            else :
+                trajet_realise =+ 1
+                lieu_depart= Jour[trajet_realise-1,4] #lieu arrivee du déplacement précédent
+                Jour.append([lieu_depart,temps_attente, temps_trajet,heure_arrivee, lieu_arrivee(lieu_depart,heure_arrivee)])
+                temps_attente=               #Solène et Guilhem parts
+                temps_trajet=
+                heure_arrivee=temps_attente+temps_trajet
+        
+        Jour=pd.concat(Jour,Jour_temp,ignore_index=True)
+    
+    
+    Jour = pd.DataFrame(Jour, columns=["Lieu_depart","Temps_attente","Temps_trajet","Heure_arrivee","Lieu_arrivee"])
     return Jour
 
 
 
 """Script"""
+#simulation()
