@@ -8,7 +8,7 @@ import random
 
 
 """Données"""
-EMP=pd.read_excel("EMP_deplacements.xlsx")
+EMP=pd.read_excel("Projet_statapp/data/EMP_deplacements_Charme.csv")
 EMP["HEURE_ARRIVEE"]=EMP["HEURE_ARRIVEE"].replace(',', '.', regex=True).astype(float)
 
 """Fonctions"""
@@ -124,7 +124,7 @@ def lieu_arrivee(lieu_depart, heure_depart): #juste l'heure, les minutes ne sont
 #Fonction finale pour notre première simulation (elle doit sortir la journée de déplacements d'un individu).
 #On reprend le format de la base EMP ? (une ligne = un déplacement)
 def simulation():
-Jour=None
+    Jour=None
 
     return Jour
 

@@ -4,7 +4,7 @@
 
 
 #Données
-EMP=pd.read_excel("EMP_deplacements.xlsx")
+print(EMP)
 
 #Fonctions
 
