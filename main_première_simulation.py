@@ -4,12 +4,20 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import random
+import scipy.stats as stats
+import ast
+from scipy.stats import invgamma,loggamma,invgauss
 
+!pip install openpyxl
 
 
 """Données"""
 EMP=pd.read_excel("Projet_statapp/data/EMP_deplacements_Charme.csv")
 EMP["HEURE_ARRIVEE"]=EMP["HEURE_ARRIVEE"].replace(',', '.', regex=True).astype(float)
+#Lire le tableau des lois de durée restée dans un lieu:
+tableau_duree= pd.read_excel("data/lois_duree.xlsx")
+tableau_duree=tableau_duree.set_index("Unnamed: 0").rename_axis("Plage horaire")
+tableau_duree=tableau_duree.map(lambda x: ast.literal_eval(x))
 
 #On crée les plages horraires :
 
@@ -110,8 +118,53 @@ def lieu_arrivee(lieu_depart, heure_depart): #juste l'heure, les minutes ne sont
     
     return Lieu_Arrivee
 
-
-
+#Fonction durée restée dans un lieu: prend une heure d'arrivée en format numérique et un lieu et renvoie une durée
+def duree_lieu(heure_arrivee,lieu):
+    if heure_arrivee<=11:
+        plage= "Matin"
+    elif heure_arrivee<=14:
+        plage="Midi"
+    elif heure_arrivee<=17:
+        plage= "Après-midi"
+    else:
+        plage= "Soir"
+    loi=tableau_duree.loc[plage,lieu]
+    print(loi[0])
+    sample=0
+    if loi[0] == 'norm':
+        # Paramètres de la distribution normale (moyenne, écart-type)
+        # Générer un seul nombre suivant la distribution normale
+        sample = np.random.normal(loc=round(loi[1][0],4), scale=round(loi[1][1],4))
+    elif loi[0]  == 'beta':
+        # Paramètres de la distribution bêta (a, b)
+        # Générer un seul nombre suivant la distribution bêta
+        sample = np.random.beta(a=round(loi[1][0],4), b=round(loi[1][-1],4))
+    elif loi[0]  == 'gamma':
+        # Paramètres de la distribution gamma (a, scale)
+        # Générer un seul nombre suivant la distribution gamma
+        sample = np.random.gamma(a=round(loi[1][0],4),loc=round(loi[1][1]), scale=round(loi[1][2],4))
+    elif loi[0] == 'pareto':
+        # Paramètres de la distribution de Pareto (b, loc, scale)
+        sample = np.random.pareto(a=loi[1][0])
+    elif loi[0] == 't':           
+        # Paramètres de la distribution t de Student (df, loc, scale)
+        sample = np.random.standard_t(df=loi[1][0], loc=loi[1][1], scale=loi[1][2])
+    elif loi[0] == 'lognorm':
+        # Paramètres de la distribution log-normale (s, loc, scale)
+        sample = np.random.lognormal(mean=loi[1][1], sigma=loi[1][0])
+    elif loi[0] == 'invgamma':
+        # Paramètres de la distribution inverse-gamma (a, loc, scale)
+         sample = invgamma.rvs(a=loi[1][0], scale=loi[1][-1])
+    elif loi[0] == 'loggamma':
+        # Paramètres de la distribution log-gamma (c, loc, scale)
+        sample = loggamma.rvs(c=loi[1][0], scale=loi[1][-1])
+    elif loi[0] == 'invgauss':
+         # Paramètres de la distribution inverse-Gaussienne (mu, loc, scale)
+        sample = invgauss.rvs(mu=loi[1][0], loc=loi[1][1], scale=loi[1][2])
+    elif loi[0] == 'chi2':
+        # Paramètres de la distribution de chi carré (df, loc, scale)
+        sample = np.random.chisquare(df=loi[1][0])
+    return sample
 
 
 
