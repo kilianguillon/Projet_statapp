@@ -12,7 +12,7 @@ from scipy.stats import invgamma,loggamma,invgauss
 
 
 """Données"""
-EMP=pd.read_excel("Projet_statapp/data/EMP_deplacements_Charme.csv")
+EMP = pd.read_csv('Projet_statapp/data/EMP_deplacements_Charme.csv')
 EMP["HEURE_ARRIVEE"]=EMP["HEURE_ARRIVEE"].replace(',', '.', regex=True).astype(float)
 
 
