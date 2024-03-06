@@ -12,7 +12,7 @@ from scipy.stats import invgamma,loggamma,invgauss
 
 
 """Données"""
-EMP=pd.read_excel("Projet_statapp/data/EMP_deplacements_Charme.csv")
+EMP=pd.read_csv("https://raw.githubusercontent.com/kilianguillon/Projet_statapp/main/data/EMP_deplacements_Charme.csv", sep=";", encoding='latin-1')
 EMP["HEURE_ARRIVEE"]=EMP["HEURE_ARRIVEE"].replace(',', '.', regex=True).astype(float)
 
 
@@ -131,7 +131,6 @@ def duree_lieu(heure_arrivee,lieu):
     else:
         plage= "Soir"
     loi=tableau_duree.loc[plage,lieu]
-    print(loi[0])
     sample=0
     if loi[0] == 'norm':
         # Paramètres de la distribution normale (moyenne, écart-type)
@@ -166,7 +165,7 @@ def duree_lieu(heure_arrivee,lieu):
     elif loi[0] == 'chi2':
         # Paramètres de la distribution de chi carré (df, loc, scale)
         sample = np.random.chisquare(df=loi[1][0])
-    return sample
+    return round(sample,2)
 
 
 
