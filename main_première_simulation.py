@@ -14,6 +14,8 @@ from scipy.stats import invgamma,loggamma,invgauss
 """Données"""
 EMP=pd.read_excel("Projet_statapp/data/EMP_deplacements_Charme.csv")
 EMP["HEURE_ARRIVEE"]=EMP["HEURE_ARRIVEE"].replace(',', '.', regex=True).astype(float)
+
+
 #Lire le tableau des lois de durée restée dans un lieu:
 tableau_duree= pd.read_excel("data/lois_duree.xlsx")
 tableau_duree=tableau_duree.set_index("Unnamed: 0").rename_axis("Plage horaire")
@@ -191,27 +193,28 @@ def simulation(n=1): #n le nombre d'individu que l'on simule
     for individu in range(n):
         
         trajet_realise=0
-        temps_attente=               #Solène et Guilhem parts (intialisation = premier départ)
+        lieu_depart = loi_lieu_depart(1)
+        temps_attente=duree_lieu(0,lieu_depart)   #Solène et Guilhem parts (intialisation = premier départ)
         temps_trajet=
         heure_arrivee=temps_attente+temps_trajet #heure d'arrivée premier trajet
         
         while heure_arrivee<24: #à modifier (on vérifie à chaque fois qu'on n'a pas fini la journée)
             if trajet_realise == 0: #c'est le premier déplacement
                 trajet_realise=1
-                lieu_arrivee=lieu_arrivee(loi_lieu_depart(1),heure_arrivee)
+                lieu_arrivee=lieu_arrivee(lieu_depart,heure_arrivee)
                 Jour.append([individu,loi_lieu_depart(1),temps_attente, temps_trajet,heure_arrivee, lieu_arrivee,trajet_realise]) 
                 #on implémente le lieu de départ, d'arrivée, le temps d'attente et de trajet que l'on a calaculé précedemment
                 #on calcule déjà l'heure d'arrivée pour savoir si on a dépassé les 24 heures
                 lieu_depart= lieu_arrivee  #lieu arrivee du déplacement précédent
-                temps_attente=               #Solène et Guilhem parts
-                temps_trajet=
+                temps_attente=duree_lieu(heure_arrivee,lieu_depart)              
+                temps_trajet=      #Solène et Guilhem parts
                 heure_arrivee =+ temps_attente+temps_trajet
 
             else : #à partir du second trajet
                 trajet_realise =+ 1
                 Jour.append([individu, lieu_depart,temps_attente, temps_trajet,heure_arrivee, lieu_arrivee(lieu_depart,heure_arrivee), trajet_realise])
                 lieu_depart= lieu_arrivee  #lieu arrivee du déplacement précédent
-                temps_attente=               #Solène et Guilhem parts
+                temps_attente= duree_lieu(heure_arrivee,lieu_depart)        #Solène et Guilhem parts
                 temps_trajet=
                 heure_arrivee =+ temps_attente+temps_trajet
    
