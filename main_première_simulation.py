@@ -7,6 +7,9 @@ import random
 import scipy.stats as stats
 import ast
 from scipy.stats import invgamma,loggamma,invgauss
+import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
+
 
 !pip install openpyxl
 
@@ -240,77 +243,62 @@ def simulation(n=1): #n le nombre d'individu que l'on simule
     Jour = pd.DataFrame(Jour, columns=["Individu","Lieu_depart","Temps_attente","Temps_trajet","Heure_depart","Heure_arrivee","Lieu_arrivee","Numero_trajet"])
     return Jour.sort_values(by='Heure_arrivee', ascending=False)
 
-import matplotlib.patches as mpatches
-import matplotlib.pyplot as plt
-import pandas as pd
+
+
+
 
 def plot_individual_travels_final(travel_data):
     """
-    Final version to plot the daily travels of an individual including parking information before the first departure
-    and after the last arrival until midnight. This version ensures uniform line thickness and better visibility
-    for parking information.
+    Adapted version to dynamically handle any parking location types and plot the daily travels of an individual,
+    including true initial and final parking information with dynamic color coding.
     
     Parameters:
     - travel_data: DataFrame containing the travel information for an individual, including departure and arrival times,
       parking locations, departure locations, trip number, and parking information.
     """
     # Ensure the data is sorted by departure time
-    travel_data_sorted = travel_data.sort_values(by='HEURE_DEPART')
+    travel_data_sorted = travel_data.sort_values(by='Heure_depart')
     
     # Start plotting
     fig, ax = plt.subplots(figsize=(12, 2))
     
-    # Initial and final parking locations, and their abbreviations
-    initial_parking_location = travel_data_sorted.iloc[0]['Lieu_Depart']
-    final_parking_location = travel_data_sorted.iloc[-1]['Lieu_Arrivee']
-    parking_abbreviations = {'Emplacement privé, gratuit (y compris domicile)': 'EPG',
-                             'Emplacement dans un parking public ou commercial payant': 'EPP',
-                             'Sur la voie publique': 'VP'}
-    
-    # Color map for parking locations
-    color_map = {'Initial Parking': 'lightgray', 'Final Parking': 'darkgray'}
-    colors = plt.cm.tab10.colors  # Using tab10 colormap for up to 10 parking locations
+    # Dynamically create a color map for parking locations
+    parking_locations = pd.concat([travel_data_sorted['Lieu_depart'], travel_data_sorted['Lieu_arrivee']]).unique()
+    colors = plt.cm.tab10(np.linspace(0, 1, len(parking_locations)))
+    color_map = {location: color for location, color in zip(parking_locations, colors)}
     
     # Plot initial parking segment (from midnight to first departure)
-    first_departure = travel_data_sorted.iloc[0]['HEURE_DEPART']
-    ax.plot([0, first_departure], [1, 1], color='lightgray', linewidth=8)
+    first_departure = travel_data_sorted.iloc[0]['Heure_depart']
+    initial_parking_color = color_map[travel_data_sorted.iloc[0]['Lieu_depart']]
+    ax.plot([0, first_departure], [1, 1], color=initial_parking_color, linewidth=8)
     
     # Loop through each trip to plot
     for index, row in travel_data_sorted.iterrows():
-        start = row['HEURE_DEPART']
-        end = row['HEURE_ARRIVEE']
-        parking_location = row['Lieu_Arrivee']
-        parking_info = row.get('Stationnement', 'Unknown')
-        
-        # Assign a color for each parking location (if not initial or final parking)
-        if parking_location not in color_map:
-            color_map[parking_location] = colors[len(color_map) % len(colors)]
+        start = row['Heure_depart']
+        end = row['Heure_arrivee']
+        parking_location = row['Lieu_arrivee']
         
         # Plot the travel segment
         ax.plot([start, end], [1, 1], color='black', linewidth=8)  # Uniform line thickness for travel
         
         # Plot the parking segment with slight spacing
         if index < len(travel_data_sorted) - 1:
-            next_start = travel_data_sorted.iloc[index + 1]['HEURE_DEPART']
-            ax.plot([end, next_start], [1, 1], color=color_map[parking_location], linewidth=8)  # Uniform line thickness for parking
-            # Add abbreviated text for parking information, placed closer to the line
-            abbreviation = parking_abbreviations.get(parking_info, 'Unk')
-            ax.text((end + next_start) / 2, 1.02, abbreviation, ha='center', va='bottom', fontsize=8, backgroundcolor='white')
+            next_start = travel_data_sorted.iloc[index + 1]['Heure_depart']
+            parking_color = color_map[parking_location]
+            ax.plot([end, next_start], [1, 1], color=parking_color, linewidth=8)
     
     # Plot final parking segment (from last arrival to midnight)
-    last_arrival = travel_data_sorted.iloc[-1]['HEURE_ARRIVEE']
-    ax.plot([last_arrival, 24], [1, 1], color='darkgray', linewidth=8)  # Uniform line thickness for final parking
+    last_arrival = travel_data_sorted.iloc[-1]['Heure_arrivee']
+    final_parking_color = color_map[travel_data_sorted.iloc[-1]['Lieu_arrivee']]
+    ax.plot([last_arrival, 24], [1, 1], color=final_parking_color, linewidth=8)
     
     # Improving the plot aesthetics
     ax.set_xlim(0, 24)  # Set x-axis to span from midnight to midnight
     ax.set_yticks([])  # Hide y-axis as it's not relevant
     ax.set_xlabel("Heure")
-    plt.title("Déplacements journaliers d'un individu avec stationnements initial et final")
+    plt.title("Déplacements journaliers d'un individu avec stationnements dynamiques")
     # Create legend entries for parking locations
-    legend_entries = [mpatches.Patch(color=color, label=label) for label, color in color_map.items() if label not in ['Initial Parking', 'Final Parking']]
-    # Optionally, add entries for initial and final parking if desired
-    legend_entries.append(mpatches.Patch(color='lightgray', label='Parking initial'))
-    legend_entries.append(mpatches.Patch(color='darkgray', label='Parking final'))
+    legend_entries = [mpatches.Patch(color=color, label=label) for label, color in color_map.items()]
     # Add legend to the plot
     ax.legend(handles=legend_entries, bbox_to_anchor=(1.05, 1), loc='upper left')
 
@@ -318,8 +306,6 @@ def plot_individual_travels_final(travel_data):
     plt.tight_layout()
     plt.show()
 
-# Example usage with the provided mock DataFrame
-# Ensure your DataFrame includes 'Stationnement' column with parking information.
 
 
 """Script"""
