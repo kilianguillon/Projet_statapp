@@ -165,6 +165,8 @@ def duree_lieu(heure_arrivee,lieu):
     elif loi[0] == 'chi2':
         # Paramètres de la distribution de chi carré (df, loc, scale)
         sample = np.random.chisquare(df=loi[1][0])
+    if sample<0:
+        sample=-sample
     return round(sample,2)
 
 
@@ -201,24 +203,26 @@ def simulation(n=1): #n le nombre d'individu que l'on simule
             if trajet_realise == 0: #c'est le premier déplacement
                 trajet_realise=1
                 lieu_arrivee=lieu_arrivee(lieu_depart,heure_arrivee)
-                Jour.append([individu,loi_lieu_depart(1),temps_attente, temps_trajet,heure_arrivee, lieu_arrivee,trajet_realise]) 
+                Jour.append([individu,lieu_depart,temps_attente, temps_trajet, temps_attente, heure_arrivee, lieu_arrivee,trajet_realise]) 
                 #on implémente le lieu de départ, d'arrivée, le temps d'attente et de trajet que l'on a calaculé précedemment
                 #on calcule déjà l'heure d'arrivée pour savoir si on a dépassé les 24 heures
-                lieu_depart= lieu_arrivee  #lieu arrivee du déplacement précédent
-                temps_attente=duree_lieu(heure_arrivee,lieu_depart)              
+                lieu_depart = lieu_arrivee  #lieu arrivee du déplacement précédent
+                temps_attente = duree_lieu(heure_arrivee,lieu_depart)              
                 temps_trajet=      #Solène et Guilhem parts
-                heure_arrivee =+ temps_attente+temps_trajet
+                heure_depart = heure_arrivee + temps_attente
+                heure_arrivee =heure_depart+temps_trajet
 
             else : #à partir du second trajet
                 trajet_realise =+ 1
-                Jour.append([individu, lieu_depart,temps_attente, temps_trajet,heure_arrivee, lieu_arrivee(lieu_depart,heure_arrivee), trajet_realise])
+                Jour.append([individu, lieu_depart,temps_attente, temps_trajet,heure_depart, heure_arrivee, lieu_arrivee(lieu_depart,heure_arrivee), trajet_realise])
                 lieu_depart= lieu_arrivee  #lieu arrivee du déplacement précédent
                 temps_attente= duree_lieu(heure_arrivee,lieu_depart)        #Solène et Guilhem parts
                 temps_trajet=
+                heure_depart = heure_arrivee+temps_attente #heure de départ du procahin
                 heure_arrivee =+ temps_attente+temps_trajet
    
     
-    Jour = pd.DataFrame(Jour, columns=["Individu","Lieu_depart","Temps_attente","Temps_trajet","Heure_arrivee","Lieu_arrivee","Numéro_trajet"])
+    Jour = pd.DataFrame(Jour, columns=["Individu","Lieu_depart","Temps_attente","Temps_trajet","Heure_depart","Heure_arrivee","Lieu_arrivee","Numéro_trajet"])
     return Jour
 
 
