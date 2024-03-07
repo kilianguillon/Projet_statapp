@@ -222,7 +222,7 @@ def simulation(n=1): #n le nombre d'individu que l'on simule
                 heure_arrivee =+ temps_attente+temps_trajet
    
     
-    Jour = pd.DataFrame(Jour, columns=["Individu","Lieu_depart","Temps_attente","Temps_trajet","Heure_depart","Heure_arrivee","Lieu_arrivee","Numéro_trajet"])
+    Jour = pd.DataFrame(Jour, columns=["Individu","Lieu_depart","Temps_attente","Temps_trajet","Heure_depart","Heure_arrivee","Lieu_arrivee","Numero_trajet"])
     return Jour
 
 
