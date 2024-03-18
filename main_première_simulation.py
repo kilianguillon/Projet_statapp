@@ -134,42 +134,13 @@ def duree_lieu(heure_arrivee,lieu):
     else:
         plage= "Soir"
     loi=tableau_duree.loc[plage,lieu]
-    sample=0
-    if loi[0] == 'norm':
-        # Paramètres de la distribution normale (moyenne, écart-type)
-        # Générer un seul nombre suivant la distribution normale
-        sample = np.random.normal(loc=round(loi[1][0],4), scale=round(loi[1][1],4))
-    elif loi[0]  == 'beta':
-        # Paramètres de la distribution bêta (a, b)
-        # Générer un seul nombre suivant la distribution bêta
-        sample = np.random.beta(a=round(loi[1][0],4), b=round(loi[1][-1],4))
-    elif loi[0]  == 'gamma':
-        # Paramètres de la distribution gamma (a, scale)
-        # Générer un seul nombre suivant la distribution gamma
-        sample = np.random.gamma(a=round(loi[1][0],4),loc=round(loi[1][1]), scale=round(loi[1][2],4))
-    elif loi[0] == 'pareto':
-        # Paramètres de la distribution de Pareto (b, loc, scale)
-        sample = np.random.pareto(a=loi[1][0])
-    elif loi[0] == 't':           
-        # Paramètres de la distribution t de Student (df, loc, scale)
-        sample = np.random.standard_t(df=loi[1][0], loc=loi[1][1], scale=loi[1][2])
-    elif loi[0] == 'lognorm':
-        # Paramètres de la distribution log-normale (s, loc, scale)
-        sample = np.random.lognormal(mean=loi[1][1], sigma=loi[1][0])
-    elif loi[0] == 'invgamma':
-        # Paramètres de la distribution inverse-gamma (a, loc, scale)
-         sample = invgamma.rvs(a=loi[1][0], scale=loi[1][-1])
-    elif loi[0] == 'loggamma':
-        # Paramètres de la distribution log-gamma (c, loc, scale)
-        sample = loggamma.rvs(c=loi[1][0], scale=loi[1][-1])
-    elif loi[0] == 'invgauss':
-         # Paramètres de la distribution inverse-Gaussienne (mu, loc, scale)
-        sample = invgauss.rvs(mu=loi[1][0], loc=loi[1][1], scale=loi[1][2])
-    elif loi[0] == 'chi2':
-        # Paramètres de la distribution de chi carré (df, loc, scale)
-        sample = np.random.chisquare(df=loi[1][0])
-    if sample<0:
-        sample=-sample
+    dist=loi[0]
+    #print(dist)
+    param=list(loi[1])
+    if abs(param[-2])<10**(-2):
+        param[-2]=0
+    #print(param)
+    sample = getattr(stats,dist).rvs(*param)
     return round(sample,2)
 
 
