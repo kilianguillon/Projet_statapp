@@ -8,7 +8,9 @@ import scipy.stats as stats
 import ast
 from scipy.stats import invgamma,loggamma,invgauss
 import matplotlib.patches as mpatches
-import matplotlib.pyplot as plt
+import statsmodels.api as sm
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.model_selection import train_test_split
 
 
 !pip install openpyxl
@@ -277,6 +279,46 @@ def plot_individual_travels_final(travel_data):
     # Show the plot
     plt.tight_layout()
     plt.show()
+
+
+
+
+
+#Fonction analysant le dataset de training pour créer un modèle de la vitesse, afin de prédire la vitesse de nos emplacements (but final : estimer la conso électrique)
+def coefvitesse(data, test_data): #on prend le sample EMP qui nous intéresse
+
+    data["HEURE_DEPART"]=data["HEURE_DEPART"].replace(',', '.', regex=True).astype(float)
+    data = data.rename(columns={'HEURE_ARRIVEE': 'Heure_arrivee'})
+    data = data.rename(columns={'HEURE_DEPART': 'Heure_depart'})
+    data["Temps_trajet"]=data["Heure_arrivee"]-data["Heure_depart"]
+    data["DISTANCE"]=data["DISTANCE"].replace(',', '.', regex=True).astype(float)
+    data["VITESSE"]=data["DISTANCE"]/data["Temps_trajet"]
+    train_data=data[["Temps_trajet", 'Heure_depart',"VITESSE"]].dropna()
+    
+    # Séparez les variables explicatives (X) et la variable cible (y)
+    X = train_data[["Temps_trajet", 'Heure_depart']]
+    y = train_data['VITESSE']
+    
+# Créez le modèle de régression linéaire
+    model = sm.OLS(y, sm.add_constant(X))
+    
+    # Ajustez le modèle aux données
+    results = model.fit()
+
+    # Préparation des données de prédiction
+    pred_X = test_data[["Temps_trajet", 'Heure_depart']]
+    pred_X = sm.add_constant(pred_X)
+    
+    # Prédiction sur les nouvelles données
+    pred_y = results.predict(pred_X)
+    
+    # Ajout des valeurs prédites au DataFrame de prédiction
+    test_data['Vitesse_predite'] = pred_y
+    test_data["Distance_predite"] = test_data["Vitesse_predite"]*test_data["Temps_trajet"] #en km
+    test_data["Consommation"] = 0.17*test_data["Distance_predite"] #en KWh
+    
+    return test_data
+
 
 
 
