@@ -202,14 +202,14 @@ def simulation(n=1): #n le nombre d'individu que l'on simule
                 heure_arrivee =heure_depart+temps_trajet
 
             else : #à partir du second trajet
-                trajet_realise =+ 1
+                trajet_realise += 1
                 lieu_arrivee = calcul_lieu_arrivee(lieu_depart,heure_arrivee)
                 Jour.append([individu, lieu_depart,temps_attente, temps_trajet,heure_depart, heure_arrivee, lieu_arrivee, trajet_realise])
                 lieu_depart= lieu_arrivee  #lieu arrivee du déplacement précédent
                 temps_attente= duree_lieu(heure_arrivee,lieu_depart)        #Solène et Guilhem parts
                 heure_depart = heure_arrivee+temps_attente #heure de départ du procahin
                 temps_trajet=duree_trajet(heure_depart)
-                heure_arrivee =+ temps_attente+temps_trajet
+                heure_arrivee += temps_attente+temps_trajet
    
     
     Jour = pd.DataFrame(Jour, columns=["Individu","Lieu_depart","Temps_attente","Temps_trajet","Heure_depart","Heure_arrivee","Lieu_arrivee","Numero_trajet"])
