@@ -126,23 +126,27 @@ def calcul_lieu_arrivee(lieu_depart, heure_depart): #juste l'heure, les minutes 
     return Lieu_Arrivee
 
 #Fonction durée restée dans un lieu: prend une heure d'arrivée en format numérique et un lieu et renvoie une durée
-def duree_lieu(heure_arrivee,lieu):
-    if heure_arrivee<=11:
-        plage= "Matin"
-    elif heure_arrivee<=14:
-        plage="Midi"
-    elif heure_arrivee<=17:
-        plage= "Après-midi"
-    else:
-        plage= "Soir"
-    loi=tableau_duree.loc[plage,lieu]
-    dist=loi[0]
-    #print(dist)
-    param=list(loi[1])
-    if abs(param[-2])<10**(-2):
-        param[-2]=0
-    #print(param)
-    sample = getattr(stats,dist).rvs(*param)
+def duree_lieu(heure_arrivee,lieu_arrivee):
+    i=0
+    while i==0:
+        if heure_arrivee<=11:
+            plage= "Matin"
+        elif heure_arrivee<=14:
+            plage="Midi"
+        elif heure_arrivee<=17:
+            plage= "Après-midi"
+        else:
+            plage= "Soir"
+        loi=tableau_duree.loc[plage,lieu_arrivee]
+        dist=loi[0]
+        #print(dist)
+        param=list(loi[1])
+        if abs(param[-2])<10**(-2):
+            param[-2]=0
+        #print(param)
+        sample = getattr(stats,dist).rvs(*param)
+        if sample>=0:
+            i=1
     return round(sample,2)
 
 
@@ -320,6 +324,24 @@ def coefvitesse(data, test_data): #on prend le sample EMP qui nous intéresse
     return test_data
 
 
+# Simulation de 10 000 journées types pour renvoyer la consommation journalière de chaque journée
+
+def donnees_simulees(n=10000):
+    '''Fonction qui génère 10 000 journées types de déplacements et calcule la consommation éléctrique associée à chaque journée en partant du principe que la consommaton d'une voiture electrique est de 17 kwh/100km'''
+    simulations=simulation(n) #On génère les n journées (correspondant à 1 individu chacune mais à plusieurs déplacements)
+    simulations_consos=coefvitesse(pd.read_excel('data/data.xlsx'),simulations)
+    conso_journees_types=simulations_consos.groupby(['Individu'])['Consommation'].sum().to_frame().apply(lambda x:round(x,3)).rename(columns={'Consommation':'Consommation (kwh)'}) # Renvoie un tableau de la consommation totale sur la journée de l'individu
+    return conso_journees_types
+
+
+def densite_energie(simulations):
+    '''Fonction qui prend en entrée une simulation effectuée par la fonction 'donnees_simulees' et renvoie la densité de l'energie consommée pour cette simulation '''
+    sns.kdeplot(data=simulations, fill=True,legend=False)
+    plt.title('Densité de la consommation')
+    plt.xlabel('Consommation (kwh)')
+    plt.ylabel('Densité')
+    plt.xlabel('Consommation (kwh)  ,   conso moyenne = '+ str(float(round(simulations.mean(),2)))+' kwh')
+    plt.show()
 
 
 """Script"""
