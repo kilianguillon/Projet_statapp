@@ -329,7 +329,7 @@ def coefvitesse(data, test_data): #on prend le sample EMP qui nous intéresse
 def donnees_simulees(n=10000):
     '''Fonction qui génère 10 000 journées types de déplacements et calcule la consommation éléctrique associée à chaque journée en partant du principe que la consommaton d'une voiture electrique est de 17 kwh/100km'''
     simulations=simulation(n) #On génère les n journées (correspondant à 1 individu chacune mais à plusieurs déplacements)
-    simulations_consos=coefvitesse(pd.read_excel('data/data.xlsx'),simulations)
+    simulations_consos=coefvitesse(EMP,simulations)
     conso_journees_types=simulations_consos.groupby(['Individu'])['Consommation'].sum().to_frame().apply(lambda x:round(x,3)).rename(columns={'Consommation':'Consommation (kwh)'}) # Renvoie un tableau de la consommation totale sur la journée de l'individu
     return conso_journees_types
 
