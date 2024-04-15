@@ -188,7 +188,7 @@ def simule_premier_depart():
     s = 0.3005  # s est l'écart-type de la distribution normale sous-jacente
     # Génère un échantillon à partir de la loi lognormale
     sample = lognorm(s=s, scale=np.exp(loc)).rvs(size=1) * scale
-    return sample
+    return sample[0]
 
 
 #c'est un schéma d'algo pour l'instant
