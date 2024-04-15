@@ -11,7 +11,7 @@ import matplotlib.patches as mpatches
 import statsmodels.api as sm
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from sklearn.model_selection import train_test_split
-
+import seaborn as sns
 
 !pip install openpyxl
 
@@ -333,15 +333,25 @@ def donnees_simulees(n=10000):
     conso_journees_types=simulations_consos.groupby(['Individu'])['Consommation'].sum().to_frame().apply(lambda x:round(x,3)).rename(columns={'Consommation':'Consommation (kwh)'}) # Renvoie un tableau de la consommation totale sur la journée de l'individu
     return conso_journees_types
 
+'''EMP_vitesse est la base de donnée EMP avec des colonne vitesse et consommation en plus'''
+EMP_vitesse= EMP.copy()
+EMP_vitesse['Vitesse (km/h)']=EMP_vitesse['DISTANCE'].apply(lambda x : float(x.replace(',','.')))/(EMP_vitesse['HEURE_ARRIVEE']-EMP_vitesse['HEURE_DEPART'].apply(lambda x : float(x.replace(',','.'))))
+EMP_vitesse ['Consommation (kwh)']= 0.17*EMP_vitesse['DISTANCE'].apply(lambda x : float(x.replace(',','.')))
+#EMP_vitesse.head()
 
-def densite_energie(simulations):
-    '''Fonction qui prend en entrée une simulation effectuée par la fonction 'donnees_simulees' et renvoie la densité de l'energie consommée pour cette simulation '''
-    sns.kdeplot(data=simulations, fill=True,legend=False)
-    plt.title('Densité de la consommation')
-    plt.xlabel('Consommation (kwh)')
-    plt.ylabel('Densité')
-    plt.xlabel('Consommation (kwh)  ,   conso moyenne = '+ str(float(round(simulations.mean(),2)))+' kwh')
-    plt.show()
+def densite_conso_journaliere(simulations):
+    '''Fonction qui prend en entrée une simulation effectuée par la fonction 'donnees_simulees' et renvoie la densité de l'energie consommée dans la journée par un individu pour cette simulation ainsi que pour la base de données EMP'''
+    fig,ax=plt.subplots(nrows=1, ncols=2, figsize=(15, 10))
+    EMP_conso= EMP_vitesse.groupby('IDENT_IND')['Consommation (kwh)'].sum().to_frame()
+    sns.kdeplot(data=EMP_conso, fill=True, legend=False,ax=ax[1])
+    sns.kdeplot(data=simulations, fill=True,legend=False, ax=ax[0])
+    plt.suptitle("Densité de la consommation journalière d'un individu (kwh)")
+    ax[0].set_xlabel('Consommation (kwh)  ,   conso moyenne = '+ str(float(round(simulations.mean(),2)))+' kwh')
+    ax[1].set_xlabel('Consommation (kwh)  ,   conso moyenne = '+ str(float(round(EMP_conso.mean(),2)))+' kwh')
+    ax[0].set_ylabel('Densité')
+    ax[1].set_ylabel('Densité')
+    ax[0].set_title("Simulation")
+    ax[1].set_title("Données empiriques EMP")
 
 
 """Script"""
