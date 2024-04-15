@@ -4,12 +4,27 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import random
+import scipy.stats as stats
+import ast
+from scipy.stats import invgamma,loggamma,invgauss
+import matplotlib.patches as mpatches
+import statsmodels.api as sm
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.model_selection import train_test_split
 
+
+!pip install openpyxl
 
 
 """Données"""
-EMP=pd.read_excel("Projet_statapp/data/EMP_deplacements_Charme.csv")
+EMP=pd.read_csv("https://raw.githubusercontent.com/kilianguillon/Projet_statapp/main/data/EMP_deplacements_Charme.csv", sep=";", encoding='latin-1')
 EMP["HEURE_ARRIVEE"]=EMP["HEURE_ARRIVEE"].replace(',', '.', regex=True).astype(float)
+
+
+#Lire le tableau des lois de durée restée dans un lieu:
+tableau_duree= pd.read_excel("data/lois_duree.xlsx")
+tableau_duree=tableau_duree.set_index("Unnamed: 0").rename_axis("Plage horaire")
+tableau_duree=tableau_duree.map(lambda x: ast.literal_eval(x))
 
 #On crée les plages horraires :
 
@@ -78,7 +93,7 @@ def transition_plage(plage):
 
 #Maintenant on va créer une fonction à laquelle on donne un lieu de départ et une heure de départ et qui nous donne un lieu d'arrivée
 #En suivant les proba obtenues ci-dessus
-def lieu_arrivee(lieu_depart, heure_depart): #juste l'heure, les minutes ne sont pas utiles
+def calcul_lieu_arrivee(lieu_depart, heure_depart): #juste l'heure, les minutes ne sont pas utiles
     if heure_depart<11: #on trouve la plage horraire correspondante
         plage="00-11h"
     elif heure_depart<14 :
@@ -110,11 +125,47 @@ def lieu_arrivee(lieu_depart, heure_depart): #juste l'heure, les minutes ne sont
     
     return Lieu_Arrivee
 
+#Fonction durée restée dans un lieu: prend une heure d'arrivée en format numérique et un lieu et renvoie une durée
+def duree_lieu(heure_arrivee,lieu_arrivee):
+    i=0
+    while i==0:
+        if heure_arrivee<=11:
+            plage= "Matin"
+        elif heure_arrivee<=14:
+            plage="Midi"
+        elif heure_arrivee<=17:
+            plage= "Après-midi"
+        else:
+            plage= "Soir"
+        loi=tableau_duree.loc[plage,lieu_arrivee]
+        dist=loi[0]
+        #print(dist)
+        param=list(loi[1])
+        if abs(param[-2])<10**(-2):
+            param[-2]=0
+        #print(param)
+        sample = getattr(stats,dist).rvs(*param)
+        if sample>=0:
+            i=1
+    return round(sample,2)
 
 
+Lois = [['lognorm', (0.8315232196253889, -0.04693502243267075, 13.901157095818125)], ['lognorm', (0.740185046920288, -0.25589461039479644, 12.666298036635478)], ['lognorm', (0.765396234015201, -0.3988473702700563, 15.391866767198913)],['invgauss', (0.5578367640441486, -2.0335629864492857, 37.452789564587334)]]
 
-
-
+def duree_trajet(heure_depart):
+    if heure_depart<=11:
+        loi = Lois[0]
+        sample = np.random.lognormal(mean=np.log(loi[1][2]), sigma=loi[1][0]) + loi[1][1]
+    elif heure_depart<=14:
+        loi = Lois[1]
+        sample = np.random.lognormal(mean=np.log(loi[1][2]), sigma=loi[1][0]) + loi[1][1]
+    elif heure_depart<=17:
+        loi = Lois[2]
+        sample = np.random.lognormal(mean=np.log(loi[1][2]), sigma=loi[1][0]) + loi[1][1]
+    else:
+        loi = Lois[3]
+        sample = invgauss.rvs(mu=loi[1][0], loc=loi[1][1], scale=loi[1][2])
+    return round(sample/60,2)
 
 
 
@@ -131,37 +182,166 @@ def lieu_arrivee(lieu_depart, heure_depart): #juste l'heure, les minutes ne sont
 
 
 #c'est un schéma d'algo pour l'instant
-def simulation(n=1):
+def simulation(n=1): #n le nombre d'individu que l'on simule
     
-    Jour=[]
+    Jour=[] #nom de la table que l'on va compléter pour tous les individus
 
     for individu in range(n):
-        Jour_temp=[]
         
-        trajet_realise=0
-        temps_attente=               #Solène et Guilhem parts
-        temps_trajet=
+        trajet_realise=0 
+        lieu_depart = loi_lieu_depart(1)[0]
+        temps_attente=duree_lieu(0,lieu_depart)   #Solène et Guilhem parts (intialisation = premier départ)
+        temps_trajet=duree_trajet(temps_attente)
         heure_arrivee=temps_attente+temps_trajet #heure d'arrivée premier trajet
         
-        while heure_arrivee<24: #à modifier (on vérifie à chaque fois qu'on n'a pas fini la journée)
+        while heure_arrivee<24: # (on vérifie à chaque fois qu'on n'a pas fini la journée)
             if trajet_realise == 0: #c'est le premier déplacement
-                Jour.append([loi_lieu_depart(1),temps_attente, temps_trajet,heure_arrivee, lieu_arrivee(loi_lieu_depart(1),heure_arrivee)]) 
                 trajet_realise=1
-            else :
-                trajet_realise =+ 1
-                lieu_depart= Jour[trajet_realise-1,4] #lieu arrivee du déplacement précédent
-                Jour.append([lieu_depart,temps_attente, temps_trajet,heure_arrivee, lieu_arrivee(lieu_depart,heure_arrivee)])
-                temps_attente=               #Solène et Guilhem parts
-                temps_trajet=
-                heure_arrivee=temps_attente+temps_trajet
-        
-        Jour=pd.concat(Jour,Jour_temp,ignore_index=True)
-    
-    
-    Jour = pd.DataFrame(Jour, columns=["Lieu_depart","Temps_attente","Temps_trajet","Heure_arrivee","Lieu_arrivee"])
-    return Jour
+                lieu_arrivee = calcul_lieu_arrivee(lieu_depart,heure_arrivee)
+                Jour.append([individu,lieu_depart,temps_attente, temps_trajet, temps_attente, heure_arrivee, lieu_arrivee,trajet_realise]) 
+                #on implémente le lieu de départ, d'arrivée, le temps d'attente et de trajet que l'on a calaculé précedemment
+                #on calcule déjà l'heure d'arrivée pour savoir si on a dépassé les 24 heures
+                lieu_depart = lieu_arrivee  #lieu arrivee du déplacement précédent
+                temps_attente = duree_lieu(heure_arrivee,lieu_depart)    
+                heure_depart = heure_arrivee + temps_attente
+                temps_trajet= duree_trajet(heure_depart)    #Solène et Guilhem parts
+                heure_arrivee =heure_depart+temps_trajet
 
+            else : #à partir du second trajet
+                trajet_realise += 1
+                lieu_arrivee = calcul_lieu_arrivee(lieu_depart,heure_arrivee)
+                Jour.append([individu, lieu_depart,temps_attente, temps_trajet,heure_depart, heure_arrivee, lieu_arrivee, trajet_realise])
+                lieu_depart= lieu_arrivee  #lieu arrivee du déplacement précédent
+                temps_attente= duree_lieu(heure_arrivee,lieu_depart)        #Solène et Guilhem parts
+                heure_depart = heure_arrivee+temps_attente #heure de départ du procahin
+                temps_trajet=duree_trajet(heure_depart)
+                heure_arrivee += temps_attente+temps_trajet
+   
+    
+    Jour = pd.DataFrame(Jour, columns=["Individu","Lieu_depart","Temps_attente","Temps_trajet","Heure_depart","Heure_arrivee","Lieu_arrivee","Numero_trajet"])
+    return Jour.sort_values(by='Heure_arrivee', ascending=True).reset_index(drop=True)
+
+
+
+
+
+def plot_individual_travels_final(travel_data):
+    """
+    Adapted version to dynamically handle any parking location types and plot the daily travels of an individual,
+    including true initial and final parking information with dynamic color coding.
+    
+    Parameters:
+    - travel_data: DataFrame containing the travel information for an individual, including departure and arrival times,
+      parking locations, departure locations, trip number, and parking information.
+    """
+    # Ensure the data is sorted by departure time
+    travel_data_sorted = travel_data.sort_values(by='Heure_depart')
+    
+    # Start plotting
+    fig, ax = plt.subplots(figsize=(12, 2))
+    
+    # Dynamically create a color map for parking locations
+    parking_locations = pd.concat([travel_data_sorted['Lieu_depart'], travel_data_sorted['Lieu_arrivee']]).unique()
+    colors = plt.cm.tab10(np.linspace(0, 1, len(parking_locations)))
+    color_map = {location: color for location, color in zip(parking_locations, colors)}
+    
+    # Plot initial parking segment (from midnight to first departure)
+    first_departure = travel_data_sorted.iloc[0]['Heure_depart']
+    initial_parking_color = color_map[travel_data_sorted.iloc[0]['Lieu_depart']]
+    ax.plot([0, first_departure], [1, 1], color=initial_parking_color, linewidth=8)
+    
+    # Loop through each trip to plot
+    for index, row in travel_data_sorted.iterrows():
+        start = row['Heure_depart']
+        end = row['Heure_arrivee']
+        parking_location = row['Lieu_arrivee']
+        
+        # Plot the travel segment
+        ax.plot([start, end], [1, 1], color='black', linewidth=8)  # Uniform line thickness for travel
+        
+        # Plot the parking segment with slight spacing
+        if index < len(travel_data_sorted) - 1:
+            next_start = travel_data_sorted.iloc[index + 1]['Heure_depart']
+            parking_color = color_map[parking_location]
+            ax.plot([end, next_start], [1, 1], color=parking_color, linewidth=8)
+    
+    # Plot final parking segment (from last arrival to midnight)
+    last_arrival = travel_data_sorted.iloc[-1]['Heure_arrivee']
+    final_parking_color = color_map[travel_data_sorted.iloc[-1]['Lieu_arrivee']]
+    ax.plot([last_arrival, 24], [1, 1], color=final_parking_color, linewidth=8)
+    
+    # Improving the plot aesthetics
+    ax.set_xlim(0, 24)  # Set x-axis to span from midnight to midnight
+    ax.set_yticks([])  # Hide y-axis as it's not relevant
+    ax.set_xlabel("Heure")
+    plt.title("Déplacements journaliers d'un individu avec stationnements dynamiques")
+    # Create legend entries for parking locations
+    legend_entries = [mpatches.Patch(color=color, label=label) for label, color in color_map.items()]
+    # Add legend to the plot
+    ax.legend(handles=legend_entries, bbox_to_anchor=(1.05, 1), loc='upper left')
+
+    # Show the plot
+    plt.tight_layout()
+    plt.show()
+
+
+
+
+
+#Fonction analysant le dataset de training pour créer un modèle de la vitesse, afin de prédire la vitesse de nos emplacements (but final : estimer la conso électrique)
+def coefvitesse(data, test_data): #on prend le sample EMP qui nous intéresse
+
+    data["HEURE_DEPART"]=data["HEURE_DEPART"].replace(',', '.', regex=True).astype(float)
+    data = data.rename(columns={'HEURE_ARRIVEE': 'Heure_arrivee'})
+    data = data.rename(columns={'HEURE_DEPART': 'Heure_depart'})
+    data["Temps_trajet"]=data["Heure_arrivee"]-data["Heure_depart"]
+    data["DISTANCE"]=data["DISTANCE"].replace(',', '.', regex=True).astype(float)
+    data["VITESSE"]=data["DISTANCE"]/data["Temps_trajet"]
+    train_data=data[["Temps_trajet", 'Heure_depart',"VITESSE"]].dropna()
+    
+    # Séparez les variables explicatives (X) et la variable cible (y)
+    X = train_data[["Temps_trajet", 'Heure_depart']]
+    y = train_data['VITESSE']
+    
+# Créez le modèle de régression linéaire
+    model = sm.OLS(y, sm.add_constant(X))
+    
+    # Ajustez le modèle aux données
+    results = model.fit()
+
+    # Préparation des données de prédiction
+    pred_X = test_data[["Temps_trajet", 'Heure_depart']]
+    pred_X = sm.add_constant(pred_X)
+    
+    # Prédiction sur les nouvelles données
+    pred_y = results.predict(pred_X)
+    
+    # Ajout des valeurs prédites au DataFrame de prédiction
+    test_data['Vitesse_predite'] = pred_y
+    test_data["Distance_predite"] = test_data["Vitesse_predite"]*test_data["Temps_trajet"] #en km
+    test_data["Consommation"] = 0.17*test_data["Distance_predite"] #en KWh
+    
+    return test_data
+
+
+# Simulation de 10 000 journées types pour renvoyer la consommation journalière de chaque journée
+
+def donnees_simulees(n=10000):
+    '''Fonction qui génère 10 000 journées types de déplacements et calcule la consommation éléctrique associée à chaque journée en partant du principe que la consommaton d'une voiture electrique est de 17 kwh/100km'''
+    simulations=simulation(n) #On génère les n journées (correspondant à 1 individu chacune mais à plusieurs déplacements)
+    simulations_consos=coefvitesse(EMP,simulations)
+    conso_journees_types=simulations_consos.groupby(['Individu'])['Consommation'].sum().to_frame().apply(lambda x:round(x,3)).rename(columns={'Consommation':'Consommation (kwh)'}) # Renvoie un tableau de la consommation totale sur la journée de l'individu
+    return conso_journees_types
+
+
+def densite_energie(simulations):
+    '''Fonction qui prend en entrée une simulation effectuée par la fonction 'donnees_simulees' et renvoie la densité de l'energie consommée pour cette simulation '''
+    sns.kdeplot(data=simulations, fill=True,legend=False)
+    plt.title('Densité de la consommation')
+    plt.xlabel('Consommation (kwh)')
+    plt.ylabel('Densité')
+    plt.xlabel('Consommation (kwh)  ,   conso moyenne = '+ str(float(round(simulations.mean(),2)))+' kwh')
+    plt.show()
 
 
 """Script"""
-#simulation()
