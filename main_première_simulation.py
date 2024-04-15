@@ -180,6 +180,16 @@ def duree_trajet(heure_depart):
 #Fonction finale pour notre première simulation (elle doit sortir la journée de déplacements d'un individu).
 #On reprend le format de la base EMP ? (une ligne = un déplacement)
 
+from scipy.stats import lognorm
+
+def simule_premier_depart():
+    loc = -0.6029
+    scale = 10.4792
+    s = 0.3005  # s est l'écart-type de la distribution normale sous-jacente
+    # Génère un échantillon à partir de la loi lognormale
+    sample = lognorm(s=s, scale=np.exp(loc)).rvs(size=1) * scale
+    return sample
+
 
 #c'est un schéma d'algo pour l'instant
 def simulation(n=1): #n le nombre d'individu que l'on simule
@@ -190,7 +200,7 @@ def simulation(n=1): #n le nombre d'individu que l'on simule
         
         trajet_realise=0 
         lieu_depart = loi_lieu_depart(1)[0]
-        temps_attente=duree_lieu(0,lieu_depart)   #Solène et Guilhem parts (intialisation = premier départ)
+        temps_attente=simule_premier_depart()
         temps_trajet=duree_trajet(temps_attente)
         heure_arrivee=temps_attente+temps_trajet #heure d'arrivée premier trajet
         
