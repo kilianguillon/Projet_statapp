@@ -326,12 +326,15 @@ def coefvitesse(data, test_data): #on prend le sample EMP qui nous intéresse
 
 # Simulation de 10 000 journées types pour renvoyer la consommation journalière de chaque journée
 
-def donnees_simulees(n=10000):
-    '''Fonction qui génère 10 000 journées types de déplacements et calcule la consommation éléctrique associée à chaque journée en partant du principe que la consommaton d'une voiture electrique est de 17 kwh/100km'''
-    simulations=simulation(n) #On génère les n journées (correspondant à 1 individu chacune mais à plusieurs déplacements)
+def donnees_simulees(simulation):
+    '''Fonction qui prend une simulation de journées types de déplacements et calcule la consommation éléctrique associée à chaque journée en partant du principe que la consommaton d'une voiture electrique est de 17 kwh/100km'''
+    simulations=simulation 
     simulations_consos=coefvitesse(EMP,simulations)
     conso_journees_types=simulations_consos.groupby(['Individu'])['Consommation'].sum().to_frame().apply(lambda x:round(x,3)).rename(columns={'Consommation':'Consommation (kwh)'}) # Renvoie un tableau de la consommation totale sur la journée de l'individu
     return conso_journees_types
+
+
+
 
 '''EMP_vitesse est la base de donnée EMP avec des colonne vitesse et consommation en plus'''
 EMP_vitesse= EMP.copy()
@@ -339,8 +342,9 @@ EMP_vitesse['Vitesse (km/h)']=EMP_vitesse['DISTANCE'].apply(lambda x : float(x.r
 EMP_vitesse ['Consommation (kwh)']= 0.17*EMP_vitesse['DISTANCE'].apply(lambda x : float(x.replace(',','.')))
 #EMP_vitesse.head()
 
-def densite_conso_journaliere(simulations):
-    '''Fonction qui prend en entrée une simulation effectuée par la fonction 'donnees_simulees' et renvoie la densité de l'energie consommée dans la journée par un individu pour cette simulation ainsi que pour la base de données EMP'''
+def densite_conso_journaliere(donnees_simulees):
+    '''Fonction qui prend en entrée une simulation effectuée par la fonction 'donnees_simulees' et renvoie la densité de l'energie consommée pour cette simulation '''
+    simulations=donnees_simulees
     fig,ax=plt.subplots(nrows=1, ncols=2, figsize=(15, 10))
     EMP_conso= EMP_vitesse.groupby('IDENT_IND')['Consommation (kwh)'].sum().to_frame()
     sns.kdeplot(data=EMP_conso, fill=True, legend=False,ax=ax[1])
@@ -352,6 +356,16 @@ def densite_conso_journaliere(simulations):
     ax[1].set_ylabel('Densité')
     ax[0].set_title("Simulation")
     ax[1].set_title("Données empiriques EMP")
+    plt.show()
+
+
+
+def quantiles_conso_journaliere(simulation):
+    ''' Fonction qui prend en argument une simulation et renvoie le taleau des quantiles et exart-type de la consommation journalière d'un individu'''
+    a=donnees_simulees(simulation).describe().transpose()
+    b=EMP_vitesse.groupby('IDENT_IND')['Consommation (kwh)'].sum().to_frame().describe().transpose()
+    return pd.concat([a,b],axis=0).set_axis(['Simulation : Consommation journalière (kwh)','EMP : Consommation journalière (kwh)'])
+
 
 
 """Script"""
