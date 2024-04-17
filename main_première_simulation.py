@@ -17,7 +17,8 @@ import seaborn as sns
 
 
 """Données"""
-EMP=pd.read_csv("https://raw.githubusercontent.com/kilianguillon/Projet_statapp/main/data/EMP_deplacements_Charme.csv", sep=";", encoding='latin-1')
+#EMP=pd.read_csv("https://raw.githubusercontent.com/kilianguillon/Projet_statapp/main/data/EMP_deplacements_Charme.csv", sep=";", encoding='latin-1')
+EMP=pd.read_excel("data/data.xlsx")
 EMP["HEURE_ARRIVEE"]=EMP["HEURE_ARRIVEE"].replace(',', '.', regex=True).astype(float)
 
 
@@ -125,8 +126,212 @@ def calcul_lieu_arrivee(lieu_depart, heure_depart): #juste l'heure, les minutes 
     
     return Lieu_Arrivee
 
-#Fonction durée restée dans un lieu: prend une heure d'arrivée en format numérique et un lieu et renvoie une durée
-def duree_lieu(heure_arrivee,lieu_arrivee):
+
+def tableau_lois_dureelieu(dataset=EMP):
+    ''' Fonction générant un tableau de lois de durée restée dans un lieu selon une base de données'''
+    emp_df=dataset
+    nb_dep_df=emp_df.groupby("IDENT_IND")["num_dep_V"].max().to_frame().rename(columns={"num_dep_V":"nb_dep"})
+    emp_df=emp_df.set_index("IDENT_IND")
+    emp_df["nb_dep"]=nb_dep_df["nb_dep"]
+    emp_df=emp_df.reset_index()
+
+    data=emp_df
+    data["Durée"]=0 #On crée une colonne "durée"
+    data.loc[data["nb_dep"]==1,"Durée"]=24-data["HEURE_ARRIVEE"]
+    data.loc[data["nb_dep"]==data["num_dep_V"],"Durée"]=24-data["HEURE_ARRIVEE"]
+    #On remplit la colonne "durée" en faisant la différence entre l'heure du prochain départ de l'individu et l'heure d'arriver à son lieu actuel.
+    data.loc[(data["nb_dep"]!=1)&(data["nb_dep"]!=data["num_dep_V"]),'Durée'] = data.groupby('IDENT_IND')["HEURE_DEPART"].shift(-1) - data["HEURE_ARRIVEE"]
+
+    emp_df=data
+    # Matin (départ entre 00h et 11h) :
+    emp_matin=emp_df[emp_df["HEURE_DEPART"]<=11]
+    # Midi (départ entre 11h et 14h) :
+    emp_midi=emp_df[(emp_df["HEURE_DEPART"]>11)&( emp_df["HEURE_DEPART"]<=14)]
+    # Après-midi (départ entre 14h et 17h) :
+    emp_am=emp_df[(emp_df["HEURE_DEPART"]>14)&( emp_df["HEURE_DEPART"]<=17)]
+    # Soir (départ entre 17h et 00h) :
+    emp_soir=emp_df[(emp_df["HEURE_DEPART"]>17)&( emp_df["HEURE_DEPART"]<=24)]
+
+    dist_names = ['norm','gamma', 'pareto', 't', 'lognorm', 'invgamma', 'invgauss', 'chi2','beta']
+
+    #Matin
+    lois_duree_matin=[]
+
+    for lieu in list(set(emp_df["Lieu_Arrivee"])):
+        #emp_matin[emp_matin["Lieu_Arrivee"]==lieu]["Durée"].plot.hist(ax=ax[i][j],bins=20,density=True,ylabel='Fréquence',subplots=True,xlabel="Durée passée sur le lieu : "+lieu+" ")
+        '''On cherche la loi qui a la plus petite somme des résidus au carré'''
+        data=emp_matin[emp_matin["Lieu_Arrivee"]==lieu]["Durée"].dropna()
+        sse = np.inf 
+        y, x = np.histogram(data, bins=48, density=True)
+        x = (x + np.roll(x, -1))[:-1] / 2.0
+
+        # Pour chaque distribution
+        for name in dist_names:
+
+            # Modéliser
+            dist = getattr(stats, name)
+            param = dist.fit(data)
+        
+            # Paramètres
+            loc = param[-2]
+            if abs(loc)<10**(-2):
+                loc=0
+            scale = param[-1]
+            arg = param[:-2]
+
+            # PDF
+            pdf = dist.pdf(x, *arg, loc=loc, scale=scale)
+            # SSE
+            model_sse = np.sum((y - pdf)**2)
+
+            # Si le SSE est diminué, enregistrer la loi
+            if model_sse < sse:
+                best_pdf = pdf
+                sse = model_sse
+                best_loc = loc
+                best_scale = scale
+                best_arg = arg
+                best_param=param
+                best_name = name
+        lois_duree_matin.append([best_name,best_param])
+
+        #Midi:
+
+        lois_duree_midi=[]
+
+    for lieu in list(set(emp_df["Lieu_Arrivee"])):
+        #emp_midi[emp_midi["Lieu_Arrivee"]==lieu]["Durée"].plot.hist(ax=ax[i][j],bins=20,density=True,ylabel='Fréquence',subplots=True,xlabel="Durée passée sur le lieu : "+lieu+" ")
+        '''On cherche la loi qui a la plus petite somme des résidus au carré'''
+        data=emp_midi[emp_midi["Lieu_Arrivee"]==lieu]["Durée"].dropna()
+        sse = np.inf 
+        y, x = np.histogram(data, bins=48, density=True)
+        x = (x + np.roll(x, -1))[:-1] / 2.0
+
+        # Pour chaque distribution
+        for name in dist_names:
+
+            # Modéliser
+            dist = getattr(stats, name)
+            param = dist.fit(data)
+
+            # Paramètres
+            loc = param[-2]
+            scale = param[-1]
+            arg = param[:-2]
+            if abs(loc)<10**(-2):
+                loc=0
+            # PDF
+            pdf = dist.pdf(x, *arg, loc=loc, scale=scale)
+            # SSE
+            model_sse = np.sum((y - pdf)**2)
+
+            # Si le SSE est diminué, enregistrer la loi
+            if model_sse < sse:
+                best_pdf = pdf
+                sse = model_sse
+                best_loc = loc
+                best_scale = scale
+                best_arg = arg
+                best_param=param
+                best_name = name
+        lois_duree_midi.append([best_name,best_param]) 
+
+    #Après-midi:
+    lois_duree_am=[]
+
+    for lieu in list(set(emp_df["Lieu_Arrivee"])):
+        #emp_am[emp_am["Lieu_Arrivee"]==lieu]["Durée"].plot.hist(ax=ax[i][j],bins=20,density=True,ylabel='Fréquence',subplots=True,xlabel="Durée passée sur le lieu : "+lieu+" ")
+        '''On cherche la loi qui a la plus petite somme des résidus au carré'''
+        data=emp_am[emp_am["Lieu_Arrivee"]==lieu]["Durée"].dropna()
+        sse = np.inf 
+        y, x = np.histogram(data, bins=48, density=True)
+        x = (x + np.roll(x, -1))[:-1] / 2.0
+
+        # Pour chaque distribution
+        for name in dist_names:
+
+            # Modéliser
+            dist = getattr(stats, name)
+            param = dist.fit(data)
+
+            # Paramètres
+            loc = param[-2]
+            scale = param[-1]
+            arg = param[:-2]
+            if abs(loc)<10**(-2):
+                loc=0
+
+            # PDF
+            pdf = dist.pdf(x, *arg, loc=loc, scale=scale)
+            # SSE
+            model_sse = np.sum((y - pdf)**2)
+
+            # Si le SSE est diminué, enregistrer la loi
+            if model_sse < sse:
+                best_pdf = pdf
+                sse = model_sse
+                best_loc = loc
+                best_scale = scale
+                best_arg = arg
+                best_param=param
+                best_name = name
+    
+        lois_duree_am.append([best_name,best_param])
+
+    #Soir:
+    lois_duree_soir=[]
+
+    for lieu in list(set(emp_df["Lieu_Arrivee"])):
+        #emp_soir[emp_soir["Lieu_Arrivee"]==lieu]["Durée"].plot.hist(ax=ax[i][j],bins=20,density=True,ylabel='Fréquence',subplots=True,xlabel="Durée passée sur le lieu : "+lieu+" ")
+        '''On cherche la loi qui a la plus petite somme des résidus au carré'''
+        data=emp_soir[emp_soir["Lieu_Arrivee"]==lieu]["Durée"].dropna()
+        sse = np.inf 
+        y, x = np.histogram(data, bins=48, density=True)
+        x = (x + np.roll(x, -1))[:-1] / 2.0
+
+        # Pour chaque distribution
+        for name in dist_names:
+
+            # Modéliser
+            dist = getattr(stats, name)
+            param = dist.fit(data)
+
+            # Paramètres
+            loc = param[-2]
+            scale = param[-1]
+            arg = param[:-2]
+            if abs(loc)<10**(-2):
+                loc=0
+
+            # PDF
+            pdf = dist.pdf(x, *arg, loc=loc, scale=scale)
+            # SSE
+            model_sse = np.sum((y - pdf)**2)
+
+            # Si le SSE est diminué, enregistrer la loi
+            if model_sse < sse :
+                best_pdf = pdf
+                sse = model_sse
+                best_loc = loc
+                best_scale = scale
+                best_arg = arg
+                best_param=param
+                best_name = name
+        lois_duree_soir.append([best_name,best_param])
+
+
+    #Création du tableau des lois :
+    lois_duree_df=pd.DataFrame(index=["Matin","Midi","Après-midi","Soir"],columns=list(set(emp_df["Lieu_Arrivee"])))
+    lois_duree_df.loc["Matin"]=lois_duree_matin
+    lois_duree_df.loc["Midi"]=lois_duree_midi
+    lois_duree_df.loc["Après-midi"]=lois_duree_am
+    lois_duree_df.loc["Soir"]=lois_duree_soir
+    return lois_duree_df
+
+
+
+def duree_lieu(heure_arrivee,lieu_arrivee,dataset=EMP):
+    '''Fonction durée restée dans un lieu: prend une heure d'arrivée en format numérique et un lieu,ainsi qu'un dataset et renvoie une durée'''
     i=0
     while i==0:
         if heure_arrivee<=11:
@@ -137,7 +342,7 @@ def duree_lieu(heure_arrivee,lieu_arrivee):
             plage= "Après-midi"
         else:
             plage= "Soir"
-        loi=tableau_duree.loc[plage,lieu_arrivee]
+        loi=tableau_lois_dureelieu(dataset).loc[plage,lieu_arrivee]
         dist=loi[0]
         #print(dist)
         param=list(loi[1])
@@ -148,6 +353,7 @@ def duree_lieu(heure_arrivee,lieu_arrivee):
         if sample>=0:
             i=1
     return round(sample,2)
+
 
 
 Lois = [['lognorm', (0.8315232196253889, -0.04693502243267075, 13.901157095818125)], ['lognorm', (0.740185046920288, -0.25589461039479644, 12.666298036635478)], ['lognorm', (0.765396234015201, -0.3988473702700563, 15.391866767198913)],['invgauss', (0.5578367640441486, -2.0335629864492857, 37.452789564587334)]]
