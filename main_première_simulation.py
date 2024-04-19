@@ -19,13 +19,13 @@ import seaborn as sns
 """Données"""
 #EMP=pd.read_csv("https://raw.githubusercontent.com/kilianguillon/Projet_statapp/main/data/EMP_deplacements_Charme.csv", sep=";", encoding='latin-1')
 EMP=pd.read_excel("data/data.xlsx")
-EMP["HEURE_ARRIVEE"]=EMP["HEURE_ARRIVEE"].replace(',', '.', regex=True).astype(float)
+EMP["HEURE_ARRIVEE"]=EMP["HEURE_ARRIVEE"].astype(float)
 
 
 #Lire le tableau des lois de durée restée dans un lieu:
-tableau_duree= pd.read_excel("data/lois_duree.xlsx")
+"""tableau_duree= pd.read_excel("data/lois_duree.xlsx")
 tableau_duree=tableau_duree.set_index("Unnamed: 0").rename_axis("Plage horaire")
-tableau_duree=tableau_duree.map(lambda x: ast.literal_eval(x))
+tableau_duree=tableau_duree.map(lambda x: ast.literal_eval(x))"""
 
 #On crée les plages horraires :
 
@@ -44,9 +44,9 @@ EMP.loc[EMP["HEURE_ARRIVEE"].between(17, 24),"Plage_horraire"] = "17-00h"
 def count_occ_pond(data, nom_var, nom_pond, taille=10):
     value = data[nom_var].unique() #cette fonction est utile pour des variables prenant un nbre de valeurs finies
     result_dict = {nom_var: [], 'Occurences pondérées': [], 'Proportion':[]} #à chaque valeur on associe la somme des occurences pondérées
-    N=data[nom_pond].replace(',', '.', regex=True).astype(float).sum()
+    N=data[nom_pond].sum()
     for val in value :
-        somme_pond = data[data[nom_var] == val][nom_pond].replace(',', '.', regex=True).astype(float).sum() #replace car la base utilisée est "française"
+        somme_pond = data[data[nom_var] == val][nom_pond].sum() 
         result_dict[nom_var].append(val)
         result_dict['Occurences pondérées'].append(somme_pond)
         result_dict['Proportion'].append(round(100*somme_pond/N,2))
@@ -507,11 +507,11 @@ def plot_individual_travels_final(travel_data):
 #Fonction analysant le dataset de training pour créer un modèle de la vitesse, afin de prédire la vitesse de nos emplacements (but final : estimer la conso électrique)
 def coefvitesse(data, test_data): #on prend le sample EMP qui nous intéresse
 
-    data["HEURE_DEPART"]=data["HEURE_DEPART"].replace(',', '.', regex=True).astype(float)
+    data["HEURE_DEPART"]=data["HEURE_DEPART"].astype(float)
     data = data.rename(columns={'HEURE_ARRIVEE': 'Heure_arrivee'})
     data = data.rename(columns={'HEURE_DEPART': 'Heure_depart'})
     data["Temps_trajet"]=data["Heure_arrivee"]-data["Heure_depart"]
-    data["DISTANCE"]=data["DISTANCE"].replace(',', '.', regex=True).astype(float)
+    data["DISTANCE"]=data["DISTANCE"].astype(float)
     data["VITESSE"]=data["DISTANCE"]/data["Temps_trajet"]
     train_data=data[["Temps_trajet", 'Heure_depart',"VITESSE"]].dropna()
     
