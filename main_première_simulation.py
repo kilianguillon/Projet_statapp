@@ -583,5 +583,38 @@ def quantiles_conso_journaliere(simulation):
     return pd.concat([a,b],axis=0).set_axis(['Simulation : Consommation journalière (kwh)','EMP : Consommation journalière (kwh)'])
 
 
-
+def heures_consommation(dataset):
+    '''Prend en argument un dataset avec colonne consommation et ajoute une colonne 'Heure' contenant l'heure entière (8,9,10...) à laquelle on considère que l'energie du trajet a été consommée'''
+    dataset=dataset.rename(columns=lambda x: x.upper())
+    dataset['Heure'] = dataset['HEURE_ARRIVEE'].astype(int)
+    colonne_conso= [colonne for colonne in dataset.columns if colonne.startswith('CONSOMMATION')]
+    dataset=dataset.rename(columns={colonne_conso[0]:'Consommation (kwh)' })
+    return dataset
+    
+def densite_conso_temps(simulation,dataset=EMP_vitesse):
+    '''Fonction qui prend en argument une simulation effectuée par la fonction "simulation" une base de données EMP avec colonne consommation et affiche la densité de la consommation par rapport au temps de cette simulation ainsi que celle de la base de donnée EMP. Elle renvoie également les deux tableau du pourcentage de la consommation à chaque heure pour la simulation et EMP)'''
+    #Pour simplifier, on suppose la consommation d'un trajet se fait à l'heure d'arrivée (car les trajets sont des trajets courtes distances
+    simulation_consos=coefvitesse(EMP,simulation)
+    fig,ax=plt.subplots(nrows=1, ncols=2, figsize=(15, 10))
+    tableau_conso=pd.DataFrame(index=list(np.arange(0,24)))
+    tableau_conso['Consommation (kwh)']=0
+    df=heures_consommation(simulation_consos)
+    for i in tableau_conso.index:
+        tableau_conso.loc[i,'Consommation (kwh)']=df.loc[df['Heure']==i]['Consommation (kwh)'].sum()
+    total_consommation=tableau_conso['Consommation (kwh)'].sum()
+    tableau_conso['Pourcentage simulation'] = (tableau_conso['Consommation (kwh)'] / total_consommation)
+    ax[0].plot(tableau_conso.index, tableau_conso['Pourcentage simulation'], marker='o', linestyle='-', color='b')
+    ax[0].fill_between(tableau_conso.index, tableau_conso['Pourcentage simulation'], color='b', alpha=0.3)
+    tableau_conso2=tableau_conso.drop(['Pourcentage simulation'],axis=1).copy()
+    dataset=heures_consommation(dataset)
+    for i in tableau_conso2.index:
+        tableau_conso2.loc[i,'Consommation (kwh)']=dataset.loc[dataset['Heure']==i]['Consommation (kwh)'].sum()
+    total_consommation2=tableau_conso2['Consommation (kwh)'].sum()
+    tableau_conso2['Pourcentage EMP'] = (tableau_conso2['Consommation (kwh)'] / total_consommation2)
+    ax[1].plot(tableau_conso2.index, tableau_conso2['Pourcentage EMP'], marker='o', linestyle='-', color='b')
+    ax[1].fill_between(tableau_conso2.index, tableau_conso2['Pourcentage EMP'], color='b', alpha=0.3)
+    ax[0].set_xticks(np.arange(24))
+    ax[1].set_xticks(np.arange(24))
+    plt.show()
+    return pd.concat([tableau_conso.drop(['Consommation (kwh)'],axis=1),tableau_conso2.drop(['Consommation (kwh)'],axis=1)],axis=1)
 """Script"""
