@@ -593,6 +593,7 @@ def heures_consommation(dataset):
     
 def densite_conso_temps(simulation,dataset=EMP_vitesse):
     '''Fonction qui prend en argument une simulation effectuée par la fonction "simulation" une base de données EMP avec colonne consommation et affiche la densité de la consommation par rapport au temps de cette simulation ainsi que celle de la base de donnée EMP. Elle renvoie également les deux tableau du pourcentage de la consommation à chaque heure pour la simulation et EMP)'''
+    '''On somme la consommation de chaque heure de la journée sur toute la base de données et on normalise'''
     #Pour simplifier, on suppose la consommation d'un trajet se fait à l'heure d'arrivée (car les trajets sont des trajets courtes distances
     simulation_consos=coefvitesse(EMP,simulation)
     fig,ax=plt.subplots(nrows=1, ncols=2, figsize=(15, 10))
@@ -615,6 +616,31 @@ def densite_conso_temps(simulation,dataset=EMP_vitesse):
     ax[1].fill_between(tableau_conso2.index, tableau_conso2['Pourcentage EMP'], color='b', alpha=0.3)
     ax[0].set_xticks(np.arange(24))
     ax[1].set_xticks(np.arange(24))
+    ax[0].set_title('Simulation')
+    ax[0].set_ylabel('Densité')
+    ax[0].set_xlabel('Temps (h)')
+    ax[1].set_title('Base de données EMP')
+    ax[1].set_ylabel('Densité')
+    ax[1].set_xlabel('Temps (h)')
+    plt.suptitle('Densités de consommation par rapport au temps au cours de la journée')
     plt.show()
     return pd.concat([tableau_conso.drop(['Consommation (kwh)'],axis=1),tableau_conso2.drop(['Consommation (kwh)'],axis=1)],axis=1)
+
+def quantiles_conso_temps(simulation,dataset=EMP_vitesse):
+    '''Fonction qui prend en argument une simulation ainsi qu'un dataset de type EMP avec colonne consommation et renvoie les tableaux de quantiles de la consommation d'un trajet selon les plages horaires pour la simulation et les données EMP'''
+    simulation_consos=coefvitesse(EMP,simulation)
+    df=heures_consommation(simulation_consos)
+    
+    df1=df.loc[(df['Heure']>=0)&(df['Heure']<11)].rename(columns={'Consommation (kwh)':'Consommation Trajet Matin (kwh)' })['Consommation Trajet Matin (kwh)'].describe().transpose().to_frame()
+    df2=df.loc[(df['Heure']>=11)&(df['Heure']<14)].rename(columns={'Consommation (kwh)':'Consommation Trajet Midi (kwh)' })['Consommation Trajet Midi (kwh)'].describe().transpose().to_frame()
+    df3=df.loc[(df['Heure']>=14)&(df['Heure']<17)].rename(columns={'Consommation (kwh)':'Consommation Trajet AM (kwh)' })['Consommation Trajet AM (kwh)'].describe().transpose().to_frame()
+    df4=df.loc[(df['Heure']>=17)&(df['Heure']<24)].rename(columns={'Consommation (kwh)':'Consommation Trajet Soir (kwh)' })['Consommation Trajet Soir (kwh)'].describe().transpose().to_frame()
+
+    df=heures_consommation(dataset)
+
+    df11=df.loc[(df['Heure']>=0)&(df['Heure']<11)].rename(columns={'Consommation (kwh)':'Consommation Trajet Matin (kwh)' })['Consommation Trajet Matin (kwh)'].describe().transpose().to_frame()
+    df22=df.loc[(df['Heure']>=11)&(df['Heure']<14)].rename(columns={'Consommation (kwh)':'Consommation Trajet Midi (kwh)' })['Consommation Trajet Midi (kwh)'].describe().transpose().to_frame()
+    df33=df.loc[(df['Heure']>=14)&(df['Heure']<17)].rename(columns={'Consommation (kwh)':'Consommation Trajet AM (kwh)' })['Consommation Trajet AM (kwh)'].describe().transpose().to_frame()
+    df44=df.loc[(df['Heure']>=17)&(df['Heure']<24)].rename(columns={'Consommation (kwh)':'Consommation Trajet Soir (kwh)' })['Consommation Trajet Soir (kwh)'].describe().transpose().to_frame()
+    return pd.concat([pd.concat([df1,df2,df3,df4],axis=1),pd.concat([df11,df22,df33,df44],axis=1)],axis=0,keys=['Simulation','Données EMP'])
 """Script"""
