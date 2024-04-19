@@ -644,4 +644,18 @@ def quantiles_conso_temps(simulation,dataset=EMP_vitesse):
     df33=df.loc[(df['Heure']>=14)&(df['Heure']<17)].rename(columns={'Consommation (kwh)':'Consommation Trajet AM (kwh)' })['Consommation Trajet AM (kwh)'].describe().transpose().to_frame()
     df44=df.loc[(df['Heure']>=17)&(df['Heure']<24)].rename(columns={'Consommation (kwh)':'Consommation Trajet Soir (kwh)' })['Consommation Trajet Soir (kwh)'].describe().transpose().to_frame()
     return pd.concat([pd.concat([df1,df2,df3,df4],axis=1),pd.concat([df11,df22,df33,df44],axis=1)],axis=0,keys=['Simulation','Données EMP'])
+
+def Kolmogorov_desnite_tps(simulation):
+    '''Fonction qui prend en argument une simulation et dit si la densite de la consommation par rapport au temps sur cette simulation suit la même loi que dans la base de données EMP grâce au test de Kolmogorov'''
+    densites=densite_conso_temps(h)
+    statistic, pvalue = stats.ks_2samp(densites['Pourcentage simulation'], densites['Pourcentage EMP'])
+    # Afficher les résultats du test
+    print("Statistique KS :", statistic)
+    print("p-valeur :", pvalue)
+
+    # Interpréter les résultats
+    if pvalue > 0.05:
+        print("Les deux échantillons suivent la même distribution.")
+    else:
+        print("Les deux échantillons ne suivent pas la même distribution.")
 """Script"""
