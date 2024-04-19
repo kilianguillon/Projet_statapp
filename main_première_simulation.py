@@ -399,7 +399,7 @@ def simule_premier_depart():
 
 
 #c'est un schéma d'algo pour l'instant
-def simulation(n=1): #n le nombre d'individu que l'on simule
+def simulation(data=EMP,n=1): #n le nombre d'individu que l'on simule
     
     Jour=[] #nom de la table que l'on va compléter pour tous les individus
 
@@ -414,7 +414,7 @@ def simulation(n=1): #n le nombre d'individu que l'on simule
         while heure_arrivee<24: # (on vérifie à chaque fois qu'on n'a pas fini la journée)
             if trajet_realise == 0: #c'est le premier déplacement
                 trajet_realise=1
-                lieu_arrivee = calcul_lieu_arrivee(lieu_depart,heure_arrivee)
+                lieu_arrivee = calcul_lieu_arrivee(lieu_depart,heure_arrivee,data)
                 Jour.append([individu,lieu_depart,temps_attente, temps_trajet, temps_attente, heure_arrivee, lieu_arrivee,trajet_realise]) 
                 #on implémente le lieu de départ, d'arrivée, le temps d'attente et de trajet que l'on a calaculé précedemment
                 #on calcule déjà l'heure d'arrivée pour savoir si on a dépassé les 24 heures
@@ -426,7 +426,7 @@ def simulation(n=1): #n le nombre d'individu que l'on simule
 
             else : #à partir du second trajet
                 trajet_realise += 1
-                lieu_arrivee = calcul_lieu_arrivee(lieu_depart,heure_arrivee)
+                lieu_arrivee = calcul_lieu_arrivee(lieu_depart,heure_arrivee, data)
                 Jour.append([individu, lieu_depart,temps_attente, temps_trajet,heure_depart, heure_arrivee, lieu_arrivee, trajet_realise])
                 lieu_depart= lieu_arrivee  #lieu arrivee du déplacement précédent
                 temps_attente= duree_lieu(heure_arrivee,lieu_depart)        #Solène et Guilhem parts
