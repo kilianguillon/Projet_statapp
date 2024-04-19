@@ -72,12 +72,12 @@ def loi_lieu_depart(n=1, p_domicile=70.49/100, p_rue=23.87/100, p_parking=3.90/1
 
 
 #On va créer un e fonction liée à count_occ_pound qui pour chaque plage horraire va nous envoyer la proba de Lieu_Arrivee pour chaque Lieu_Depart
-def transition_plage(plage):
+def transition_plage(plage, df=EMP):
 
     Lieux = ["Domicile","Rue","Entreprise","Parking","Sans"] 
     results=None
     for Lieu in Lieux:
-        data = EMP[(EMP["Plage_horraire"] == plage) & (EMP["Lieu_Depart"] == Lieu)]
+        data = df[(df["Plage_horraire"] == plage) & (df["Lieu_Depart"] == Lieu)]
         results_temp = count_occ_pond(data, 'Lieu_Arrivee', 'POND_JOUR').iloc[:, [0, 2]]
 
         results_temp["Proportion"] = results_temp["Proportion"] / 100
@@ -92,9 +92,10 @@ def transition_plage(plage):
     return results
 
 
+
 #Maintenant on va créer une fonction à laquelle on donne un lieu de départ et une heure de départ et qui nous donne un lieu d'arrivée
 #En suivant les proba obtenues ci-dessus
-def calcul_lieu_arrivee(lieu_depart, heure_depart): #juste l'heure, les minutes ne sont pas utiles
+def calcul_lieu_arrivee(lieu_depart, heure_depart, df=EMP): #juste l'heure, les minutes ne sont pas utiles
     if heure_depart<11: #on trouve la plage horraire correspondante
         plage="00-11h"
     elif heure_depart<14 :
@@ -104,8 +105,8 @@ def calcul_lieu_arrivee(lieu_depart, heure_depart): #juste l'heure, les minutes 
     else:
         plage="17-00h"
 
-    table=transition_plage(plage)[["Lieu_Arrivee", "Proba_"+lieu_depart]] #on prend les proba de déplacement pour cette plage et ce lieu de départ
-    
+    table=transition_plage(plage, df)[["Lieu_Arrivee", "Proba_"+lieu_depart]] #on prend les proba de déplacement pour cette plage et ce lieu de départ
+
     proba_parking = table.loc[table["Lieu_Arrivee"] == "Parking"].iloc[0,1]#proba d'aller dans un parking selon l'heure et le lieu de départ donnés.
     proba_domicile = table.loc[table["Lieu_Arrivee"] == "Domicile"].iloc[0,1]
     proba_rue = table.loc[table["Lieu_Arrivee"] == "Rue"].iloc[0,1]
