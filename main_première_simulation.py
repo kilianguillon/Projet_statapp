@@ -541,6 +541,115 @@ def coefvitesse(data, test_data): #on prend le sample EMP qui nous intéresse
     return test_data
 
 
+from scipy.stats import ttest_ind_from_stats
+
+def compare_weighted_means_and_test_adequacy(EMP1, simu):
+    # Calculer la moyenne et l'écart-type des valeurs maximum de "num_dep_V" pour EMP1 et EMP2
+    mean1 = EMP1.groupby("IDENT_IND")["num_dep_V"].max().mean()
+    std1 = EMP1.groupby("IDENT_IND")["num_dep_V"].max().std()
+    nobs1 = EMP1.groupby("IDENT_IND")["num_dep_V"].max().count()
+
+    mean2 = simu.groupby("IDENT_IND")["num_dep_V"].max().mean()
+    std2 = simu.groupby("IDENT_IND")["num_dep_V"].max().std()
+    nobs2 = simu.groupby("IDENT_IND")["num_dep_V"].max().count()
+
+    print(f"Moyenne de num_dep_V pour EMP1 : {mean1}")
+    print(f"Moyenne de num_dep_V pour EMP2 : {mean2}")
+
+    # Effectuer un test d'adéquation pondéré (test t de Student indépendant à partir des statistiques)
+    t_stat, p_value = ttest_ind_from_stats(mean1=mean1, std1=std1, nobs1=nobs1,
+                                           mean2=mean2, std2=std2, nobs2=nobs2)
+
+    print(f"Statistique de test t : {t_stat}")
+    print(f"Valeur p : {p_value}")
+
+    # Interpréter le résultat du test
+    alpha = 0.05
+    if p_value < alpha:
+        print("Les moyennes sont statistiquement différentes.")
+    else:
+        print("Les moyennes sont statistiquement similaires.")
+
+
+#On crée une fonction qui va nous calculer le temps moyen passé dans chaque lieu de stationement de notre base de données
+#Le but étant de comparer EMP et nos simulations
+def parking(data):
+    # Trier le DataFrame par 'IDENT_IND' et 'heure_depart'
+    data = data.sort_values(by=['IDENT_IND', 'HEURE_DEPART'])
+    
+    # Calculer le temps d'attente pour chaque trajet
+    data['temps_attente'] = data.groupby('IDENT_IND')['HEURE_DEPART'].diff().fillna(data["HEURE_DEPART"])
+    
+    # Identifier le dernier trajet de la journée pour chaque individu
+    data['dernier_trajet_journee'] = data.groupby('IDENT_IND')['HEURE_ARRIVEE'].transform('max')
+    
+    # Calculer le temps d'attente jusqu'à minuit pour le dernier trajet de chaque journée
+    data['temps_attente_jusqua_minuit'] = 24 - data['dernier_trajet_journee']
+    
+    # Mettre à 0 le temps d'attente jusqu'à minuit lorsque heure_arrivee est différent de dernier_trajet_journee
+    data.loc[EMP['HEURE_ARRIVEE'] != data['dernier_trajet_journee'], 'temps_attente_jusqua_minuit'] = 0
+
+    # Regrouper les données par 'IDENT_IND' et 'Lieu_Depart' et sommer les temps d'attente
+    EMP_ATT = data.groupby(['IDENT_IND', 'Lieu_Depart', 'Lieu_Arrivee'])[['temps_attente', 'temps_attente_jusqua_minuit']].sum().reset_index()
+    
+    # Sélectionner les colonnes nécessaires pour EMP_ATT1 et renommer les colonnes
+    EMP_ATT1 = EMP_ATT[["IDENT_IND", "Lieu_Depart", "temps_attente"]].copy()
+    EMP_ATT1.rename(columns={
+        'IDENT_IND': 'Identifiant',
+        'Lieu_Depart': 'Lieu',
+        'temps_attente': 'TempsAttente'
+    }, inplace=True)
+    
+    # Sélectionner les colonnes nécessaires pour EMP_ATT2, ajuster la colonne temps_attente_jusqua_minuit et renommer la colonne
+    EMP_ATT2 = EMP_ATT[["IDENT_IND", "Lieu_Arrivee", "temps_attente_jusqua_minuit"]].copy()
+    EMP_ATT2.rename(columns={
+        'IDENT_IND': 'Identifiant',
+        'Lieu_Arrivee': 'Lieu',
+        'temps_attente_jusqua_minuit': 'TempsAttente'
+    }, inplace=True)
+    
+    # Concaténer les DataFrames EMP_ATT1 et EMP_ATT2, puis regrouper par 'Identifiant' et 'Lieu' et sommer les temps d'attente
+    EMP_ATT = pd.concat([EMP_ATT1, EMP_ATT2], ignore_index=True).groupby(['Identifiant', 'Lieu'])["TempsAttente"].sum().reset_index() 
+
+    # Créer une table pivot avec les lieux comme colonnes et les individus comme index
+    #Comme ça on a 0 lorsque l'individu n'attend pas dans ce lieu
+    EMP_ATT_p=EMP_ATT.pivot_table(index='Identifiant', columns='Lieu', values='TempsAttente', fill_value=0).reset_index()
+
+    return EMP_ATT_p
+
+from scipy.stats import ks_2samp
+
+def kolmosmir(test_data, simulation):
+
+    pivot_table1 = parking(test_data)
+    pivot_table2 = parking(simulation)
+    # Sélectionner les colonnes des cinq lieux
+    lieux = ['Domicile', 'Rue', 'Entreprise', 'Sans', 'Parking']
+    
+    # Créer des DataFrames pour stocker les résultats des tests
+    ks_results = pd.DataFrame(index=lieux, columns=['statistic', 'pvalue', 'nobs1', 'nobs2', 'accepte_hypothese'])
+
+    alpha=0.05
+    
+    # Effectuer le test de Kolmogorov-Smirnov pour chaque lieu
+    for lieu in lieux:
+        # Calculer les statistiques pour les deux distributions
+        ks_statistic, ks_pvalue = ks_2samp(pivot_table1[lieu], pivot_table2[lieu])
+        nobs_test = len(pivot_table1[lieu])
+        nobs_simu = len(pivot_table2[lieu])
+            # Déterminer si l'hypothèse est acceptée ou rejetée
+        accepte_hypothese = ks_pvalue > alpha
+        
+        # Stocker les résultats dans le DataFrame
+        ks_results.loc[lieu] = [ks_statistic, ks_pvalue, nobs_test, nobs_simu, accepte_hypothese]
+    
+    # Afficher les résultats des tests
+    return ks_results
+
+
+
+
+
 # Simulation de 10 000 journées types pour renvoyer la consommation journalière de chaque journée
 
 def donnees_simulees(simulation):
