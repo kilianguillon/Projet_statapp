@@ -663,6 +663,7 @@ def donnees_simulees(simulation):
 
 
 '''EMP_vitesse est la base de donnée EMP avec des colonne vitesse et consommation en plus'''
+
 EMP_vitesse= EMP.copy()
 EMP_vitesse['Vitesse (km/h)']=EMP_vitesse['DISTANCE'].apply(lambda x : float(x.replace(',','.')))/(EMP_vitesse['HEURE_ARRIVEE']-EMP_vitesse['HEURE_DEPART'].apply(lambda x : float(x.replace(',','.'))))
 EMP_vitesse ['Consommation (kwh)']= 0.17*EMP_vitesse['DISTANCE'].apply(lambda x : float(x.replace(',','.')))
@@ -767,4 +768,16 @@ def Kolmogorov_desnite_tps(simulation):
         print("Les deux échantillons suivent la même distribution.")
     else:
         print("Les deux échantillons ne suivent pas la même distribution.")
-"""Script"""
+
+
+
+"""
+# Fonction pour créer un fichier CSV à partir d'un DataFrame Pandas
+def creer_fichier_csv(nom_fichier, dataframe):
+    dataframe.to_csv(nom_fichier, index=False)
+
+# Exécuter la fonction et créer un fichier CSV
+if __name__ == "__main__":
+    creer_fichier_csv("simulation.csv", simulation(EMP,100)) 
+    print("Fichier CSV créé avec succès!")
+"""
