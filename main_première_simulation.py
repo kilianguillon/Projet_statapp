@@ -19,6 +19,7 @@ import seaborn as sns
 """Données"""
 #EMP=pd.read_csv("https://raw.githubusercontent.com/kilianguillon/Projet_statapp/main/data/EMP_deplacements_Charme.csv", sep=";", encoding='latin-1')
 EMP=pd.read_excel("data/data.xlsx")
+Simulation = pd.read_csv("simulation.csv")
 EMP["HEURE_ARRIVEE"]=EMP["HEURE_ARRIVEE"].astype(float)
 
 
@@ -549,9 +550,9 @@ def compare_weighted_means_and_test_adequacy(EMP1, simu):
     std1 = EMP1.groupby("IDENT_IND")["num_dep_V"].max().std()
     nobs1 = EMP1.groupby("IDENT_IND")["num_dep_V"].max().count()
 
-    mean2 = simu.groupby("IDENT_IND")["num_dep_V"].max().mean()
-    std2 = simu.groupby("IDENT_IND")["num_dep_V"].max().std()
-    nobs2 = simu.groupby("IDENT_IND")["num_dep_V"].max().count()
+    mean2 = simu.groupby("Individu")["Numero_trajet"].max().mean()
+    std2 = simu.groupby("Individu")["Numero_trajet"].max().std()
+    nobs2 = simu.groupby("Individu")["Numero_trajet"].max().count()
 
     print(f"Moyenne de num_dep_V pour EMP1 : {mean1}")
     print(f"Moyenne de num_dep_V pour EMP2 : {mean2}")
@@ -781,3 +782,4 @@ if __name__ == "__main__":
     creer_fichier_csv("simulation.csv", simulation(EMP,100)) 
     print("Fichier CSV créé avec succès!")
 """
+
