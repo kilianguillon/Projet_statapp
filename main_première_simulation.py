@@ -666,8 +666,8 @@ def donnees_simulees(simulation):
 '''EMP_vitesse est la base de donnée EMP avec des colonne vitesse et consommation en plus'''
 
 EMP_vitesse= EMP.copy()
-EMP_vitesse['Vitesse (km/h)']=EMP_vitesse['DISTANCE'].apply(lambda x : float(x.replace(',','.')))/(EMP_vitesse['HEURE_ARRIVEE']-EMP_vitesse['HEURE_DEPART'].apply(lambda x : float(x.replace(',','.'))))
-EMP_vitesse ['Consommation (kwh)']= 0.17*EMP_vitesse['DISTANCE'].apply(lambda x : float(x.replace(',','.')))
+EMP_vitesse['Vitesse (km/h)']=EMP_vitesse['DISTANCE']/(EMP_vitesse['HEURE_ARRIVEE']-EMP_vitesse['HEURE_DEPART'])
+EMP_vitesse ['Consommation (kwh)']= 0.17*EMP_vitesse['DISTANCE']
 #EMP_vitesse.head()
 
 def densite_conso_journaliere(donnees_simulees):
