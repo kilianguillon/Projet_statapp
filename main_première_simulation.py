@@ -554,8 +554,8 @@ def compare_weighted_means_and_test_adequacy(EMP1, simu):
     std2 = simu.groupby("Individu")["Numero_trajet"].max().std()
     nobs2 = simu.groupby("Individu")["Numero_trajet"].max().count()
 
-    print(f"Moyenne de num_dep_V pour EMP1 : {mean1}")
-    print(f"Moyenne de num_dep_V pour EMP2 : {mean2}")
+    print(f"Moyenne de num_dep_V pour EMP : {mean1}")
+    print(f"Moyenne de num_dep_V pour nos simulations : {mean2}")
 
     # Effectuer un test d'adéquation pondéré (test t de Student indépendant à partir des statistiques)
     t_stat, p_value = ttest_ind_from_stats(mean1=mean1, std1=std1, nobs1=nobs1,
