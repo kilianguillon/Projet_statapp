@@ -618,12 +618,57 @@ def parking(data):
 
     return EMP_ATT_p
 
+def parkingsimu(data):
+    # Trier le DataFrame par 'IDENT_IND' et 'heure_depart'
+    data = data.sort_values(by=['Individu', 'Heure_depart'])
+    
+    # Calculer le temps d'attente pour chaque trajet
+    data['temps_attente'] = data.groupby('Individu')['Heure_depart'].diff().fillna(data["Heure_depart"])
+    
+    # Identifier le dernier trajet de la journée pour chaque individu
+    data['dernier_trajet_journee'] = data.groupby('Individu')['Heure_depart'].transform('max')
+    
+    # Calculer le temps d'attente jusqu'à minuit pour le dernier trajet de chaque journée
+    data['temps_attente_jusqua_minuit'] = 24 - data['dernier_trajet_journee']
+    
+    # Mettre à 0 le temps d'attente jusqu'à minuit lorsque heure_arrivee est différent de dernier_trajet_journee
+    data.loc[data['Heure_depart'] != data['dernier_trajet_journee'], 'temps_attente_jusqua_minuit'] = 0
+
+    # Regrouper les données par 'IDENT_IND' et 'Lieu_Depart' et sommer les temps d'attente
+    EMP_ATT = data.groupby(['Individu', 'Lieu_depart', 'Lieu_arrivee'])[['temps_attente', 'temps_attente_jusqua_minuit']].sum().reset_index()
+    
+    # Sélectionner les colonnes nécessaires pour EMP_ATT1 et renommer les colonnes
+    EMP_ATT1 = EMP_ATT[["Individu", "Lieu_depart", "temps_attente"]].copy()
+    EMP_ATT1.rename(columns={
+        'Individu': 'Identifiant',
+        'Lieu_depart': 'Lieu',
+        'temps_attente': 'TempsAttente'
+    }, inplace=True)
+    
+    # Sélectionner les colonnes nécessaires pour EMP_ATT2, ajuster la colonne temps_attente_jusqua_minuit et renommer la colonne
+    EMP_ATT2 = EMP_ATT[["Individu", "Lieu_arrivee", "temps_attente_jusqua_minuit"]].copy()
+    EMP_ATT2.rename(columns={
+        'Individu': 'Identifiant',
+        'Lieu_arrivee': 'Lieu',
+        'temps_attente_jusqua_minuit': 'TempsAttente'
+    }, inplace=True)
+    
+    # Concaténer les DataFrames EMP_ATT1 et EMP_ATT2, puis regrouper par 'Identifiant' et 'Lieu' et sommer les temps d'attente
+    EMP_ATT = pd.concat([EMP_ATT1, EMP_ATT2], ignore_index=True).groupby(['Identifiant', 'Lieu'])["TempsAttente"].sum().reset_index() 
+
+    # Créer une table pivot avec les lieux comme colonnes et les individus comme index
+    #Comme ça on a 0 lorsque l'individu n'attend pas dans ce lieu
+    EMP_ATT_p=EMP_ATT.pivot_table(index='Identifiant', columns='Lieu', values='TempsAttente', fill_value=0).reset_index()
+
+    return EMP_ATT_p
+
+
 from scipy.stats import ks_2samp
 
 def kolmosmir(test_data, simulation):
 
     pivot_table1 = parking(test_data)
-    pivot_table2 = parking(simulation)
+    pivot_table2 = parkingsimu(simulation)
     # Sélectionner les colonnes des cinq lieux
     lieux = ['Domicile', 'Rue', 'Entreprise', 'Sans', 'Parking']
     
