@@ -122,9 +122,19 @@ def calcul_lieu_arrivee(lieu_depart, heure_depart, df=EMP): #juste l'heure, les 
     proba_parking = table.loc[table["Lieu_Arrivee"] == "Parking"].iloc[0,1]#proba d'aller dans un parking selon l'heure et le lieu de départ donnés.
     proba_domicile = table.loc[table["Lieu_Arrivee"] == "Domicile"].iloc[0,1]
     proba_rue = table.loc[table["Lieu_Arrivee"] == "Rue"].iloc[0,1]
-    proba_entreprise = table.loc[table["Lieu_Arrivee"] == "Entreprise"].iloc[0,1]
-    proba_sans = table.loc[table["Lieu_Arrivee"] == "Sans"].iloc[0,1]
-    
+    proba_entreprise = 0  # Initialiser proba_sans à une valeur par défaut
+    proba_sans = 0  # Initialiser proba_sans à une valeur par défaut
+
+    # Vérifier d'abord si des lignes correspondent à la condition
+    if not table[table["Lieu_Arrivee"] == "Entreprise"].empty:
+    # S'il y a des lignes correspondantes, accéder à la valeur à l'index 0
+        proba_entreprise = table.loc[table["Lieu_Arrivee"] == "Entreprise"].iloc[0, 1]
+ # Vérifier d'abord si des lignes correspondent à la condition
+    if not table[table["Lieu_Arrivee"] == "Sans"].empty:
+    # S'il y a des lignes correspondantes, accéder à la valeur à l'index 0
+        proba_sans = table.loc[table["Lieu_Arrivee"] == "Sans"].iloc[0, 1]
+
+
     tirage=random.uniform(0, 1) #on construit la loi avec les probas obtenues
     if tirage < proba_parking:
         Lieu_Arrivee="Parking"
@@ -828,14 +838,14 @@ def Kolmogorov_desnite_tps(simulation):
 
 
 
-"""
+
 # Fonction pour créer un fichier CSV à partir d'un DataFrame Pandas
 def creer_fichier_csv(nom_fichier, dataframe):
     dataframe.to_csv(nom_fichier, index=False)
 
 # Exécuter la fonction et créer un fichier CSV
 if __name__ == "__main__":
-    creer_fichier_csv("simulation.csv", simulation(EMP,100)) 
+    creer_fichier_csv("simulation_weekend.csv", simulation(weekend_EMP,500)) 
     print("Fichier CSV créé avec succès!")
-"""
+
 
