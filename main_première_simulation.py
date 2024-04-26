@@ -19,8 +19,24 @@ import seaborn as sns
 """Données"""
 #EMP=pd.read_csv("https://raw.githubusercontent.com/kilianguillon/Projet_statapp/main/data/EMP_deplacements_Charme.csv", sep=";", encoding='latin-1')
 EMP=pd.read_excel("data/data.xlsx")
+#On crée les plages horraires :
+
+EMP.loc[EMP["HEURE_ARRIVEE"].between(0, 11),"Plage_horraire"] = "00-11h"
+EMP.loc[EMP["HEURE_ARRIVEE"].between(11, 14),"Plage_horraire"] = "11-14h"
+EMP.loc[EMP["HEURE_ARRIVEE"].between(14, 17),"Plage_horraire"] = "14-17h"
+EMP.loc[EMP["HEURE_ARRIVEE"].between(17, 24),"Plage_horraire"] = "17-00h"
+
 Simulation = pd.read_csv("simulation.csv")
 EMP["HEURE_ARRIVEE"]=EMP["HEURE_ARRIVEE"].astype(float)
+import pandas as pd
+
+weekend_EMP = EMP[(EMP['TYPE_jour'] == 'samedi') | (EMP['TYPE_jour'] == 'dimanche')]
+
+# Filtrer les données pour obtenir les lignes où TYPE_jour n'est pas "samedi" ou "dimanche"
+weekday_EMP = EMP[~((EMP['TYPE_jour'] == 'samedi') | (EMP['TYPE_jour'] == 'dimanche'))]
+
+# Maintenant, weekend_data contient les lignes avec TYPE_jour égal à "samedi" ou "dimanche",
+# et weekday_data contient les autres lignes.
 
 
 #Lire le tableau des lois de durée restée dans un lieu:
@@ -28,12 +44,7 @@ EMP["HEURE_ARRIVEE"]=EMP["HEURE_ARRIVEE"].astype(float)
 tableau_duree=tableau_duree.set_index("Unnamed: 0").rename_axis("Plage horaire")
 tableau_duree=tableau_duree.map(lambda x: ast.literal_eval(x))"""
 
-#On crée les plages horraires :
 
-EMP.loc[EMP["HEURE_ARRIVEE"].between(0, 11),"Plage_horraire"] = "00-11h"
-EMP.loc[EMP["HEURE_ARRIVEE"].between(11, 14),"Plage_horraire"] = "11-14h"
-EMP.loc[EMP["HEURE_ARRIVEE"].between(14, 17),"Plage_horraire"] = "14-17h"
-EMP.loc[EMP["HEURE_ARRIVEE"].between(17, 24),"Plage_horraire"] = "17-00h"
 
 
 
@@ -415,12 +426,12 @@ def simulation(data=EMP,n=1): #n le nombre d'individu que l'on simule
         while heure_arrivee<24: # (on vérifie à chaque fois qu'on n'a pas fini la journée)
             if trajet_realise == 0: #c'est le premier déplacement
                 trajet_realise=1
-                lieu_arrivee = calcul_lieu_arrivee(lieu_depart,heure_arrivee,data)
+                lieu_arrivee = calcul_lieu_arrivee(lieu_depart,heure_arrivee, data)
                 Jour.append([individu,lieu_depart,temps_attente, temps_trajet, temps_attente, heure_arrivee, lieu_arrivee,trajet_realise]) 
                 #on implémente le lieu de départ, d'arrivée, le temps d'attente et de trajet que l'on a calaculé précedemment
                 #on calcule déjà l'heure d'arrivée pour savoir si on a dépassé les 24 heures
                 lieu_depart = lieu_arrivee  #lieu arrivee du déplacement précédent
-                temps_attente = duree_lieu(heure_arrivee,lieu_depart)    
+                temps_attente = duree_lieu(heure_arrivee,lieu_depart,data)    
                 heure_depart = heure_arrivee + temps_attente
                 temps_trajet= duree_trajet(heure_depart)    #Solène et Guilhem parts
                 heure_arrivee =heure_depart+temps_trajet
@@ -430,7 +441,7 @@ def simulation(data=EMP,n=1): #n le nombre d'individu que l'on simule
                 lieu_arrivee = calcul_lieu_arrivee(lieu_depart,heure_arrivee, data)
                 Jour.append([individu, lieu_depart,temps_attente, temps_trajet,heure_depart, heure_arrivee, lieu_arrivee, trajet_realise])
                 lieu_depart= lieu_arrivee  #lieu arrivee du déplacement précédent
-                temps_attente= duree_lieu(heure_arrivee,lieu_depart)        #Solène et Guilhem parts
+                temps_attente= duree_lieu(heure_arrivee,lieu_depart,data)        #Solène et Guilhem parts
                 heure_depart = heure_arrivee+temps_attente #heure de départ du procahin
                 temps_trajet=duree_trajet(heure_depart)
                 heure_arrivee += temps_attente+temps_trajet
