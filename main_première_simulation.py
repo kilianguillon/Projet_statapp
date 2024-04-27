@@ -27,6 +27,8 @@ EMP.loc[EMP["HEURE_ARRIVEE"].between(14, 17),"Plage_horraire"] = "14-17h"
 EMP.loc[EMP["HEURE_ARRIVEE"].between(17, 24),"Plage_horraire"] = "17-00h"
 
 Simulation = pd.read_csv("simulation.csv")
+Simulation_weekday = pd.read_csv("simulation_weekday.csv")
+Simulation_weekend = pd.read_csv("simulation_weekend.csv")
 EMP["HEURE_ARRIVEE"]=EMP["HEURE_ARRIVEE"].astype(float)
 import pandas as pd
 
@@ -838,14 +840,14 @@ def Kolmogorov_desnite_tps(simulation):
 
 
 
-
+"""
 # Fonction pour créer un fichier CSV à partir d'un DataFrame Pandas
 def creer_fichier_csv(nom_fichier, dataframe):
     dataframe.to_csv(nom_fichier, index=False)
 
 # Exécuter la fonction et créer un fichier CSV
 if __name__ == "__main__":
-    creer_fichier_csv("simulation_weekend.csv", simulation(weekend_EMP,500)) 
+    creer_fichier_csv("simulation_weekday.csv", simulation(weekday_EMP,500)) 
     print("Fichier CSV créé avec succès!")
-
+"""
 
