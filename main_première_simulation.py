@@ -850,27 +850,32 @@ if __name__ == "__main__":
     creer_fichier_csv("simulation_weekday.csv", simulation(weekday_EMP,500)) 
     print("Fichier CSV créé avec succès!")
 """
-"""
-import matplotlib.pyplot as plt
 
+import matplotlib.pyplot as plt
+mEMP = EMP.groupby("IDENT_IND")["num_dep_V"].max().reset_index()
+mSimulation = Simulation.groupby("Individu")["Numero_trajet"].max().reset_index()
+mweekend_EMP=weekend_EMP.groupby("IDENT_IND")["num_dep_V"].max().reset_index()
+mSimulation_weekend =  Simulation_weekend.groupby("Individu")["Numero_trajet"].max().reset_index()
+mweekday_EMP=weekday_EMP.groupby("IDENT_IND")["num_dep_V"].max().reset_index()
+mSimulation_weekday = Simulation_weekday.groupby("Individu")["Numero_trajet"].max().reset_index()
 
 #tout EMP
 # Création de la figure et des sous-graphiques
 fig, axs = plt.subplots(1, 2, figsize=(12, 6))
 
 # Création des histogrammes pour EMP
-axs[0].hist(EMP["num_dep_V"], bins=range(min(min(EMP["num_dep_V"]), min(Simulation['Numero_trajet'])), 12), color='green', label='EMP')
+axs[0].hist(mEMP["num_dep_V"], bins=range(min(min(mEMP["num_dep_V"]), min(mSimulation['Numero_trajet'])), 12), color='green', label='EMP')
 axs[0].set_xlabel('Nombre de trajets')
 axs[0].set_ylabel('Fréquence')
-axs[0].set_title('Distribution du nombre de trajets - EMP')
-axs[0].set_xticks(range(min(min(EMP["num_dep_V"]), min(Simulation['Numero_trajet'])), 12))
+axs[0].set_title('Distribution du nombre de trajets par individu - EMP')
+axs[0].set_xticks(range(min(min(mEMP["num_dep_V"]), min(mSimulation['Numero_trajet'])), 12))
 
 # Création des histogrammes pour Simulation
-axs[1].hist(Simulation['Numero_trajet'], bins=range(min(min(EMP["num_dep_V"]), min(Simulation['Numero_trajet'])), 12), color='red', label='Simulations')
+axs[1].hist(mSimulation['Numero_trajet'], bins=range(min(min(mEMP["num_dep_V"]), min(mSimulation['Numero_trajet'])), 12), color='red', label='Simulations')
 axs[1].set_xlabel('Nombre de trajets')
 axs[1].set_ylabel('Fréquence')
-axs[1].set_title('Distribution du nombre de trajets - Simulations')
-axs[1].set_xticks(range(min(min(EMP["num_dep_V"]), min(Simulation['Numero_trajet'])), 12))
+axs[1].set_title('Distribution du nombre de trajets par individu - Simulations')
+axs[1].set_xticks(range(min(min(mEMP["num_dep_V"]), min(mSimulation['Numero_trajet'])), 12))
 
 # Affichage des graphiques
 plt.tight_layout()
@@ -880,7 +885,7 @@ plt.show()
 from scipy.stats import ks_2samp
 
 # Test de Kolmogorov-Smirnov
-ks_statistic, p_value = ks_2samp(EMP["num_dep_V"], Simulation["Numero_trajet"])
+ks_statistic, p_value = ks_2samp(mEMP["num_dep_V"], mSimulation["Numero_trajet"])
 
 print("Test de Kolmogorov-Smirnov:")
 print("KS-statistic:", ks_statistic)
@@ -892,26 +897,27 @@ print("p-value:", p_value)
 fig, axs = plt.subplots(1, 2, figsize=(12, 6))
 
 # Création des histogrammes pour EMP
-axs[0].hist(weekday_EMP["num_dep_V"], bins=range(min(min(weekday_EMP["num_dep_V"]), min(Simulation_weekday['Numero_trajet'])), 12), color='green', label='EMP')
+axs[0].hist(mweekday_EMP["num_dep_V"], bins=range(min(min(mweekday_EMP["num_dep_V"]), min(mSimulation_weekday['Numero_trajet'])), 12), color='green', label='EMP')
 axs[0].set_xlabel('Nombre de trajets')
 axs[0].set_ylabel('Fréquence')
-axs[0].set_title('Distribution du nombre de trajets en semaine - EMP')
-axs[0].set_xticks(range(min(min(weekday_EMP["num_dep_V"]), min(Simulation_weekday['Numero_trajet'])), 12))
+axs[0].set_title('Distribution du nombre de trajets par individu - EMP')
+axs[0].set_xticks(range(min(min(mweekday_EMP["num_dep_V"]), min(mSimulation_weekday['Numero_trajet'])), 12))
 
 # Création des histogrammes pour Simulation
-axs[1].hist(Simulation_weekday['Numero_trajet'], bins=range(min(min(weekday_EMP["num_dep_V"]), min(Simulation_weekday['Numero_trajet'])), 12), color='red', label='Simulations')
+axs[1].hist(mSimulation_weekday['Numero_trajet'], bins=range(min(min(mweekday_EMP["num_dep_V"]), min(mSimulation_weekday['Numero_trajet'])), 12), color='red', label='Simulations')
 axs[1].set_xlabel('Nombre de trajets')
 axs[1].set_ylabel('Fréquence')
-axs[1].set_title('Distribution du nombre de trajets en semaine - Simulations')
-axs[1].set_xticks(range(min(min(weekday_EMP["num_dep_V"]), min(Simulation_weekday['Numero_trajet'])), 12))
-
+axs[1].set_title('Distribution du nombre de trajets par individu - Simulations')
+axs[1].set_xticks(range(min(min(mweekday_EMP["num_dep_V"]), min(mSimulation_weekday['Numero_trajet'])), 12))
+# Sauvegarder le graphique au format PNG
+plt.savefig('num_WD.png')
 # Affichage des graphiques
 plt.tight_layout()
 plt.show()
 
 
 # Test de Kolmogorov-Smirnov
-ks_statistic, p_value = ks_2samp(weekday_EMP["num_dep_V"], Simulation_weekday["Numero_trajet"])
+ks_statistic, p_value = ks_2samp(mweekday_EMP["num_dep_V"], mSimulation_weekday["Numero_trajet"])
 
 print("Test de Kolmogorov-Smirnov:")
 print("KS-statistic:", ks_statistic)
@@ -922,31 +928,32 @@ print("p-value:", p_value)
 fig, axs = plt.subplots(1, 2, figsize=(12, 6))
 
 # Création des histogrammes pour EMP
-axs[0].hist(weekend_EMP["num_dep_V"], bins=range(min(min(weekend_EMP["num_dep_V"]), min(Simulation_weekend['Numero_trajet'])), 12), color='green', label='EMP')
+axs[0].hist(mweekend_EMP["num_dep_V"], bins=range(min(min(mweekend_EMP["num_dep_V"]), min(mSimulation_weekend['Numero_trajet'])), 12), color='green', label='EMP')
 axs[0].set_xlabel('Nombre de trajets')
 axs[0].set_ylabel('Fréquence')
-axs[0].set_title('Distribution du nombre de trajets - EMP')
-axs[0].set_xticks(range(min(min(weekend_EMP["num_dep_V"]), min(Simulation_weekend['Numero_trajet'])), 12))
+axs[0].set_title('Distribution du nombre de trajets par individu - EMP')
+axs[0].set_xticks(range(min(min(mweekend_EMP["num_dep_V"]), min(mSimulation_weekend['Numero_trajet'])), 12))
 
 # Création des histogrammes pour Simulation
-axs[1].hist(Simulation_weekend['Numero_trajet'], bins=range(min(min(weekend_EMP["num_dep_V"]), min(Simulation_weekend['Numero_trajet'])), 12), color='red', label='Simulations')
+axs[1].hist(mSimulation_weekend['Numero_trajet'], bins=range(min(min(mweekend_EMP["num_dep_V"]), min(mSimulation_weekend['Numero_trajet'])), 12), color='red', label='Simulations')
 axs[1].set_xlabel('Nombre de trajets')
 axs[1].set_ylabel('Fréquence')
-axs[1].set_title('Distribution du nombre de trajets - Simulations')
-axs[1].set_xticks(range(min(min(weekend_EMP["num_dep_V"]), min(Simulation_weekend['Numero_trajet'])), 12))
-
+axs[1].set_title('Distribution du nombre de trajets par individu - Simulations')
+axs[1].set_xticks(range(min(min(mweekend_EMP["num_dep_V"]), min(mSimulation_weekend['Numero_trajet'])), 12))
+# Sauvegarder le graphique au format PNG
+plt.savefig('num_WE.png')
 # Affichage des graphiques
 plt.tight_layout()
 plt.show()
 
 
 # Test de Kolmogorov-Smirnov
-ks_statistic, p_value = ks_2samp(weekend_EMP["num_dep_V"], Simulation_weekend["Numero_trajet"])
+ks_statistic, p_value = ks_2samp(mweekend_EMP["num_dep_V"], mSimulation_weekend["Numero_trajet"])
 
 print("Test de Kolmogorov-Smirnov:")
 print("KS-statistic:", ks_statistic)
 print("p-value:", p_value)
-"""
+
 
 
 
