@@ -611,7 +611,7 @@ def parking(data):
     data['temps_attente_jusqua_minuit'] = 24 - data['dernier_trajet_journee']
     
     # Mettre à 0 le temps d'attente jusqu'à minuit lorsque heure_arrivee est différent de dernier_trajet_journee
-    data.loc[EMP['HEURE_ARRIVEE'] != data['dernier_trajet_journee'], 'temps_attente_jusqua_minuit'] = 0
+    data.loc[data['HEURE_ARRIVEE'] != data['dernier_trajet_journee'], 'temps_attente_jusqua_minuit'] = 0
 
     # Regrouper les données par 'IDENT_IND' et 'Lieu_Depart' et sommer les temps d'attente
     EMP_ATT = data.groupby(['IDENT_IND', 'Lieu_Depart', 'Lieu_Arrivee'])[['temps_attente', 'temps_attente_jusqua_minuit']].sum().reset_index()
@@ -850,7 +850,7 @@ if __name__ == "__main__":
     creer_fichier_csv("simulation_weekday.csv", simulation(weekday_EMP,500)) 
     print("Fichier CSV créé avec succès!")
 """
-
+"""
 import matplotlib.pyplot as plt
 mEMP = EMP.groupby("IDENT_IND")["num_dep_V"].max().reset_index()
 mSimulation = Simulation.groupby("Individu")["Numero_trajet"].max().reset_index()
@@ -953,7 +953,87 @@ ks_statistic, p_value = ks_2samp(mweekend_EMP["num_dep_V"], mSimulation_weekend[
 print("Test de Kolmogorov-Smirnov:")
 print("KS-statistic:", ks_statistic)
 print("p-value:", p_value)
+"""
 
+
+from scipy.stats import ttest_ind
+
+# Séparer les données en deux groupes
+groupe_1 = parking(EMP)[['Domicile', 'Entreprise', 'Parking', 'Rue', 'Sans']]
+groupe_2 = parkingsimu(Simulation)[['Domicile', 'Entreprise', 'Parking', 'Rue', 'Sans']]
+
+# Créer une liste pour stocker les résultats
+resultats_liste = []
+
+# Effectuer le test t de Student pour chaque lieu
+for lieu in ['Domicile', 'Entreprise', 'Parking', 'Rue', 'Sans']:
+    t_statistic, p_value = ttest_ind(groupe_1[lieu], groupe_2[lieu])
+    
+    resultats_liste.append({
+        'Lieu': lieu,
+        'Moyenne EMP': round(groupe_1[lieu].mean(),2),
+        'Moyenne simulations': round(groupe_2[lieu].mean(),2),
+        'Stat. de test (t)': round(t_statistic,2),
+        'p-value': round(p_value,3)
+    })
+# Créer un DataFrame à partir de la liste de résultats
+resultats = pd.DataFrame(resultats_liste)
+
+# Afficher le tableau des résultats
+print(resultats)
+
+
+# Séparer les données en deux groupes
+groupe_1 = parking(weekday_EMP)[['Domicile', 'Entreprise', 'Parking', 'Rue', 'Sans']]
+groupe_2 = parkingsimu(Simulation_weekday)[['Domicile', 'Entreprise', 'Parking', 'Rue', 'Sans']]
+
+# Créer une liste pour stocker les résultats
+resultats_liste = []
+
+# Effectuer le test t de Student pour chaque lieu
+for lieu in ['Domicile', 'Entreprise', 'Parking', 'Rue', 'Sans']:
+    t_statistic, p_value = ttest_ind(groupe_1[lieu], groupe_2[lieu])
+    
+    # Ajouter les résultats à la liste
+    resultats_liste.append({
+        'Lieu': lieu,
+        'Moyenne EMP': round(groupe_1[lieu].mean(),2),
+        'Moyenne simulations': round(groupe_2[lieu].mean(),2),
+        'Stat. de test (t)': round(t_statistic,2),
+        'p-value': round(p_value,3)
+    })
+
+# Créer un DataFrame à partir de la liste de résultats
+resultats = pd.DataFrame(resultats_liste)
+
+# Afficher le tableau des résultats
+print(resultats)
+
+# Séparer les données en deux groupes
+groupe_1 = parking(weekend_EMP)[['Domicile', 'Entreprise', 'Parking', 'Rue', 'Sans']]
+groupe_2 = parkingsimu(Simulation_weekend)[['Domicile', 'Entreprise', 'Parking', 'Rue', 'Sans']]
+
+# Créer une liste pour stocker les résultats
+resultats_liste = []
+
+# Effectuer le test t de Student pour chaque lieu
+for lieu in ['Domicile', 'Entreprise', 'Parking', 'Rue', 'Sans']:
+    t_statistic, p_value = ttest_ind(groupe_1[lieu], groupe_2[lieu])
+    
+    # Ajouter les résultats à la liste
+    resultats_liste.append({
+        'Lieu': lieu,
+        'Moyenne EMP': round(groupe_1[lieu].mean(),2),
+        'Moyenne simulations': round(groupe_2[lieu].mean(),2),
+        'Stat. de test (t)': round(t_statistic,2),
+        'p-value': round(p_value,3)
+    })
+
+# Créer un DataFrame à partir de la liste de résultats
+resultats = pd.DataFrame(resultats_liste)
+
+# Afficher le tableau des résultats
+print(resultats)
 
 
 
