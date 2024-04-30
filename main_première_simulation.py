@@ -637,9 +637,15 @@ def parking(data):
 
     # Créer une table pivot avec les lieux comme colonnes et les individus comme index
     #Comme ça on a 0 lorsque l'individu n'attend pas dans ce lieu
-    EMP_ATT_p=EMP_ATT.pivot_table(index='Identifiant', columns='Lieu', values='TempsAttente', fill_value=0).reset_index()
+    EMP_ATT_P=EMP_ATT.pivot_table(index='Identifiant', columns='Lieu', values='TempsAttente', fill_value=0)
+    EMP_ATT_P["Temps_total"]= EMP_ATT_P["Domicile"] + EMP_ATT_P["Parking"] +EMP_ATT_P["Entreprise"] +EMP_ATT_P["Rue"] +EMP_ATT_P["Sans"]
+    EMP_ATT_P["Domicile"]=EMP_ATT_P["Domicile"]/EMP_ATT_P["Temps_total"]
+    EMP_ATT_P["Parking"]=EMP_ATT_P["Parking"]/EMP_ATT_P["Temps_total"]
+    EMP_ATT_P["Entreprise"]=EMP_ATT_P["Entreprise"]/EMP_ATT_P["Temps_total"]
+    EMP_ATT_P["Rue"]=EMP_ATT_P["Rue"]/EMP_ATT_P["Temps_total"]
+    EMP_ATT_P["Sans"]=EMP_ATT_P["Sans"]/EMP_ATT_P["Temps_total"]
 
-    return EMP_ATT_p
+    return EMP_ATT_P
 
 def parkingsimu(data):
     # Trier le DataFrame par 'IDENT_IND' et 'heure_depart'
@@ -681,9 +687,15 @@ def parkingsimu(data):
 
     # Créer une table pivot avec les lieux comme colonnes et les individus comme index
     #Comme ça on a 0 lorsque l'individu n'attend pas dans ce lieu
-    EMP_ATT_p=EMP_ATT.pivot_table(index='Identifiant', columns='Lieu', values='TempsAttente', fill_value=0).reset_index()
+    EMP_ATT_P=EMP_ATT.pivot_table(index='Identifiant', columns='Lieu', values='TempsAttente', fill_value=0)
+    EMP_ATT_P["Temps_total"]= EMP_ATT_P["Domicile"] + EMP_ATT_P["Parking"] +EMP_ATT_P["Entreprise"] +EMP_ATT_P["Rue"] +EMP_ATT_P["Sans"]
+    EMP_ATT_P["Domicile"]=EMP_ATT_P["Domicile"]/EMP_ATT_P["Temps_total"]
+    EMP_ATT_P["Parking"]=EMP_ATT_P["Parking"]/EMP_ATT_P["Temps_total"]
+    EMP_ATT_P["Entreprise"]=EMP_ATT_P["Entreprise"]/EMP_ATT_P["Temps_total"]
+    EMP_ATT_P["Rue"]=EMP_ATT_P["Rue"]/EMP_ATT_P["Temps_total"]
+    EMP_ATT_P["Sans"]=EMP_ATT_P["Sans"]/EMP_ATT_P["Temps_total"]
 
-    return EMP_ATT_p
+    return EMP_ATT_P
 
 
 from scipy.stats import ks_2samp
@@ -955,7 +967,7 @@ print("KS-statistic:", ks_statistic)
 print("p-value:", p_value)
 """
 
-
+"""
 from scipy.stats import ttest_ind
 
 # Séparer les données en deux groupes
@@ -1034,6 +1046,5 @@ resultats = pd.DataFrame(resultats_liste)
 
 # Afficher le tableau des résultats
 print(resultats)
-
-
+"""
 
