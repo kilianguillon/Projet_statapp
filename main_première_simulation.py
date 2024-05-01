@@ -862,7 +862,6 @@ if __name__ == "__main__":
     creer_fichier_csv("simulation_weekday.csv", simulation(weekday_EMP,500)) 
     print("Fichier CSV créé avec succès!")
 """
-"""
 import matplotlib.pyplot as plt
 mEMP = EMP.groupby("IDENT_IND")["num_dep_V"].max().reset_index()
 mSimulation = Simulation.groupby("Individu")["Numero_trajet"].max().reset_index()
@@ -890,6 +889,8 @@ axs[1].set_title('Distribution du nombre de trajets par individu - Simulations')
 axs[1].set_xticks(range(min(min(mEMP["num_dep_V"]), min(mSimulation['Numero_trajet'])), 12))
 
 # Affichage des graphiques
+plt.savefig('num.png')
+
 plt.tight_layout()
 plt.show()
 
@@ -1046,5 +1047,5 @@ resultats = pd.DataFrame(resultats_liste)
 
 # Afficher le tableau des résultats
 print(resultats)
-"""
+
 
